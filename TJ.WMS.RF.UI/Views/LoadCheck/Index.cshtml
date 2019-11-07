@@ -377,7 +377,7 @@
                         $("#txtLoadNO").select();
                         return;
                     }
-                    if (dataObj.finish == '1') {
+                    //if (dataObj.finish == '1') {
                         // 数据返回成功就在页面显示相关的信息
                         var StoreNO = dataObj.StoreNO;
                         var StoreDesc = dataObj.StoreDesc;
@@ -392,15 +392,15 @@
                         $("#Loading").css("visibility", "hidden");
                         // 选择出库箱文本框
                         $("#txtTrayNO").select();
-                    } else {
-                        var PaperNO = dataObj.PaperNO;
-                        $('#lblPaperNO').html(PaperNO);
-                        $("#Loading").css("visibility", "hidden");
-                        $("#Msg").css("visibility", "visible");
-                        $("#Msg").html("当前装载号已完成扫描");
-                        // 选择装载号文本框
-                        $("#txtLoadNO").select();
-                    }
+                    //} else {
+                    //    var PaperNO = dataObj.PaperNO;
+                    //    $('#lblPaperNO').html(PaperNO);
+                    //    $("#Loading").css("visibility", "hidden");
+                    //    $("#Msg").css("visibility", "visible");
+                    //    $("#Msg").html("当前装载号已完成扫描");
+                    //    // 选择装载号文本框
+                    //    $("#txtLoadNO").select();
+                    //}
                 }
                 catch (exception) {
                     //执行错误

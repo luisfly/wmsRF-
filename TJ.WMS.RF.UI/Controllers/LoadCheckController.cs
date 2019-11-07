@@ -53,9 +53,9 @@ namespace TJ.WMS.RF.UI.Controllers
                 string StoreDesc = service.GetParameter("StoreDesc").ToString();
                 string ProvTypeID = service.GetParameter("ProvTypeID").ToString();
                 string TrayNum = service.GetParameter("TrayNum").ToString();
-                string finish = service.GetParameter("finish").ToString();
+                //string finish = service.GetParameter("finish").ToString();
                 // return Content(ProvTypeID);
-                return Json(new { isSuccess = true, PaperNO = PaperNO, ProvTypeID = ProvTypeID, StoreNO = StoreNO, StoreDesc = StoreDesc, TrayNum = TrayNum, finish = finish });
+                return Json(new { isSuccess = true, PaperNO = PaperNO, ProvTypeID = ProvTypeID, StoreNO = StoreNO, StoreDesc = StoreDesc, TrayNum = TrayNum });
                 //   return Content("[{\"isSuccess\":\"1\",\"sMessage\":\"\"," + "\"PaperNO\":\"" + service.GetParameter("PaperNO").ToString() + "\"}]");
             }
             catch (Exception ex)
