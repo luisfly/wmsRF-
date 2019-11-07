@@ -1,0 +1,139 @@
+﻿@{
+    Layout = null;
+    object obj = null;
+    int n = 1;
+
+    Response.Write("<a></a>");
+    int width = Request.Browser.ScreenPixelsWidth;
+
+
+}
+@using TJ.WMS.RF.UI.Models
+@model IEnumerable<MenuModel>
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>@Session["CompanyTitle"]</title>
+
+    <link href="@Url.Content("~/Content/Layout2.css")" rel="stylesheet" type="text/css" />
+
+    <!--[if lte IE 8]>
+       <link href="@Url.Content("~/Content/Layout1.css")" rel="stylesheet" type="text/css" />
+    <![endif]-->
+
+    <script src="@Url.Content("~/Scripts/jquery-1.4.4.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery.validate.min.js")" type="text/javascript"></script>
+    <style type="text/css">
+    </style>
+
+</head>
+
+<body>
+    @*<input  value="@width"/>*@
+
+    <div id="header">
+
+        @if (Session["User_ID"] == null)
+        {
+            <h3 class="title">@Session["CompanyTitle"]</h3>
+        }
+        else
+        {
+            if (Session["User_Name"] != null)
+            {
+                <table cellspacing="1" cellpadding="0" width="100%">
+                    <tr></tr>
+                    <tr></tr>
+                    <tr></tr>
+                    <tr>
+                        <td align="left" width="30%" style="color: #FFFFFF;font-size: 12px">@Session["User_Name"]</td>
+                        <td align="center" style="color: #FFFFFF"><b>菜单</b></td>
+                          <td align="right" width="25%" style="font-size: 12px"><a href="#" onclick="if (confirm('您确定要退出系统操作吗？')) { location.href = '/Home'; }" target="_self">退出</a></td>
+                    </tr>
+                </table>
+                <!--
+                          <h3>菜单</h3><a href="javascript:if(confirm('您确定要退出系统操作吗？')){window.location.href('/Home');}" target="_self">退出</a><span id="loginUser">欢迎，@Session["User_Name"]  </span>
+                -->
+            }
+        }
+    </div>
+
+
+
+    <div id="">
+
+
+        @if (width <= 260)
+        {
+            <table cellpadding="0" cellspacing="2" width="100%">
+                <tr>
+
+                    <td align="left">
+                        @foreach (MenuModel menu in Model)
+                        {
+                            if (obj == null)
+                            { obj = menu.ID; }
+                            <a class="menu_btn" id="@menu.ID" href="@menu.Url">(@n)@menu.Name</a>
+                            if (n % 2 == 0)
+                            { }
+                            n++;
+                        }
+                        <input id="hdID" type="hidden" value="@obj.ToString()" />
+                    </td>
+                </tr>
+            </table>
+        }
+        else
+        {
+            <div class="box-wrap">
+                @foreach (MenuModel menu in Model)
+                {
+
+                    if (obj == null)
+                    { obj = menu.ID; }
+                    //var src = "image/" + menu.ID.ToString() + ".png";
+
+
+                    <a class="menu_btn" id="@menu.ID" href="@menu.Url">
+                        @*<img src="@src" style="margin-top: 20px;" />*@
+
+                        (@n)@menu.Name
+                    </a>
+
+                    if (n % 2 == 0)
+                    { }
+                    n++;
+
+
+                }
+                <input id="hdID" type="hidden" value="@obj.ToString()" />
+            </div>
+        }
+
+
+
+
+    </div>
+</body>
+
+
+
+</html>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 118)//F7
+            {
+                document.getElementById(hdID.value).focus();
+                //alert(hdID.value);
+            }
+        });
+        document.getElementById(hdID.value).focus();
+    })
+</script>

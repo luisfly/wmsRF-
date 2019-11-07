@@ -1,0 +1,136 @@
+﻿@{
+    ViewBag.Title = "储位查询";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string ToDay = DateTime.Today.ToShortDateString();
+    string Barcode = Request.QueryString["Barcode"];
+}
+ <div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">仓位编码</td>
+            <td class="content">
+                <input id="txtLocationNO" name="txtGoosName" type="text" class="tdInput" />
+            </td>
+        </tr>
+    </table>
+</div>
+<div style="height:5px"></div>
+    <div class="goodsquery">
+        <table id="tbMainQuery">
+            <thead>
+                <tr>
+                    <!--               <td>储位</td>
+                                   <td>托盘</td>
+                                   <td>当前数量</td>
+                                   <td>销定数量</td>  -->
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+ <script type="text/javascript">
+     var objGoodsList;
+     $(document).ready(function () {
+         
+       
+
+         $("#txtLocationNO").keypress(function (e) {
+             if (e.which == 13) {
+                 RFLocationNOQuery(this);
+             }
+         }).blur();
+       
+         $("#txtLocationNO").focus();
+         $("#txtLocationNO").select();
+
+
+     });
+
+     function RFLocationNOQuery(obj) {
+        
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+       
+         $("#tbMainQuery thead").html("");
+         $("#tbMainQuery tbody").html("");
+         $.post("/LocationQuery/RFLocationQuery",
+            {
+                "LocationNO": $("#txtLocationNO").val()
+            },
+            function (data, textStatus) {
+                //if ($("#txtBarCode").val() != "") {
+                    //有数据
+                    //alert(data);
+                    var dataObj;
+                    try {
+                        dataObj = eval(data);
+                        objGoodsList = dataObj;//用于全局选择明细条码时用
+                        if (dataObj == undefined || dataObj.length <= 0) {
+                            //数据异常
+                            $("#tbMainQuery thead").html("");
+                            $("#tbMainQuery tbody").html("");
+                            $("#Loading").css("visibility", "hidden");
+                            $("#Msg").css("visibility", "visible");
+                            $("#Msg").html(data);
+                            //$("#txtBarCode").select();
+                            $("#txtLocationNO").focus();
+                            $("#txtLocationNO").select();
+                            return;
+                        }
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        trString = "<tr>"
+                        //trString += "<td style='text-align: center;'>储位</td>";
+                        trString += "<td style='text-align: center;'>单位</td>";
+                        trString += "<td style='text-align: center;'>托盘/<br/>生产日期</td>";
+                        trString += "<td style='text-align: center;'>商品条码/<br/>商品名称</td>";
+                        trString += "<td nowrap style='text-align: center;white-space:nowrap;word-break:nowrap'>数量</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+                        var trString = "";
+                        for (var index in dataObj) {
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]['Unit'] + "</td>";
+                            trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['TrayNO'] + "</span><br/><br/>" + dataObj[index]['ProductDate'] + "</td>";
+                            trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['MainBarcode'] + "</span> <br/>" + dataObj[index]['GoodsDesc'] + "</td>";
+                          //trString += "<td>" + dataObj[index]['ProductDate'] + "<br/>" +dataObj[index]['StockBatchNO'] + "</td>";
+                            trString += "<td>" + dataObj[index]['AllQty'] + "</td>";
+                          //trString += "<td>" + dataObj[index]['LockQty'] + "</td>";
+                            trString += "</tr>"
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+                        }
+                        var color = "#ffeab3"
+                        $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                        /* 把背景色保存到属性中 */
+                        $("#tbMainQuery tr:odd").attr("bg", color);
+                        $("#tbMainQuery tr:even").attr("bg", "#fff");
+                        $("#Loading").css("visibility", "hidden");
+                        //$("#txtBarCode").select();
+                        $("#txtLocationNO").focus();
+                        $("#txtLocationNO").select();
+                    }
+                catch (exception) {
+                    
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        //$("#txtBarCode").select();
+                        $("#txtLocationNO").focus();
+                        $("#txtLocationNO").select();
+                    }
+
+            }
+         )
+     }
+
+
+
+     
+
+ </script>
+

@@ -1,0 +1,89 @@
+﻿@{
+    ViewBag.Title = "报溢";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<form id="billForm" action="/StockBY/Detail" method="POST" >
+         <input type="hidden" id="hdBillCode" name="hdBillCode"/>
+</form>
+
+<div class="box">
+    <table cellspacing="1" cellpadding="0">
+       <tr>
+          <td class="title">报溢单号</td>
+          <td class="content"><input type="text"  name="txtBillCode" id="txtBillCode" class="tdInput"  /></td>
+       </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtBillCode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePaperNO();
+            }
+        }).blur();
+        $("#txtBillCode").focus();
+        $("#txtBillCode").select();
+    })
+    
+    function ValidatePaperNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $.post("/StockBY/ValidateOrderCode",
+      { "BYPaperNO": $("#txtBillCode").val() },
+      function (data, txtStatus) {
+          if (data=="") {
+              $("#hdBillCode").val($("#txtBillCode").val());
+              $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility", "visible");
+              $("#Msg").html("操作成功，正在跳转...");
+              Pause(this, 500); //调用暂停函数
+              this.NextStep = function () {
+                  $("#billForm").submit();
+              }
+          }
+          else {
+              $("#Loading").css("visibility", "hidden");
+              $("#txtBillCode").select();
+              $("#Msg").html(data);
+              $("#Msg").css("visibility", "visible")
+          }
+      }
+   );
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  function Pause(obj, iMinSecond) {
+      if (window.eventList == null) window.eventList = new Array();
+      var ind = -1;
+      for (var i = 0; i < window.eventList.length; i++) {
+          if (window.eventList[i] == null) {
+              window.eventList[i] = obj;
+              ind = i;
+              break;
+          }
+      }
+      if (ind == -1) {
+          ind = window.eventList.length;
+          window.eventList[ind] = obj;
+      }
+      setTimeout("GoOn(" + ind + ")", iMinSecond);
+  }
+  function GoOn(ind) {
+      var obj = window.eventList[ind];
+      window.eventList[ind] = null;
+      if (obj.NextStep) obj.NextStep();
+      else obj();
+  }
+  function GetUrlPara(paraName) {
+      var sUrl = location.href;
+      var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+      var re = new RegExp(sReg, "gi");
+      re.exec(sUrl);
+      return RegExp.$1;
+  }
+  ///////////////////////////////////////////////////////////////////
+</script> 
+
+
+

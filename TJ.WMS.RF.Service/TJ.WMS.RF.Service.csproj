@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BAB114EB-5CE6-4E01-891D-FE37D33F1C75}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TJ.WMS.RF.Service</RootNamespace>
+    <AssemblyName>TJ.WMS.RF.Service</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\Reference Library\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\TJ.WMS.RF.UI\bin\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AlertMessage.cs" />
+    <Compile Include="Business.cs" />
+    <Compile Include="BusinessObject.cs" />
+    <Compile Include="CheckObject.cs" />
+    <Compile Include="CratesRFID.cs" />
+    <Compile Include="DBHelper.cs" />
+    <Compile Include="DcAcceptV2.cs" />
+    <Compile Include="DcAcceptV3.cs" />
+    <Compile Include="InvTaskService.cs" />
+    <Compile Include="MatchpLatePC.cs" />
+    <Compile Include="rfidlib.cs" />
+    <Compile Include="rfidlib_drv_rpan.cs" />
+    <Compile Include="rfidlib_reader.cs" />
+    <Compile Include="RfidReplace.cs" />
+    <Compile Include="SmartDbParams.cs" />
+    <Compile Include="StdQuery.cs" />
+    <Compile Include="CS2Move.cs" />
+    <Compile Include="StockBY.cs" />
+    <Compile Include="TPShelves.cs" />
+    <Compile Include="收货指示上架.cs" />
+    <Compile Include="CratesToStore.cs" />
+    <Compile Include="集货分板.cs" />
+    <Compile Include="集货分板V2.cs" />
+    <Compile Include="集货拼板.cs" />
+    <Compile Include="PickGoodsBase.cs" />
+    <Compile Include="PutCageService.cs" />
+    <Compile Include="Replenish.cs" />
+    <Compile Include="越库播种.cs" />
+    <Compile Include="移仓.cs" />
+    <Compile Include="退配收货.cs" />
+    <Compile Include="集货.cs" />
+    <Compile Include="出库装筐.cs" />
+    <Compile Include="载具回收.cs" />
+    <Compile Include="Loger.cs" />
+    <Compile Include="装车.cs" />
+    <Compile Include="退配分板.cs" />
+    <Compile Include="仓储拼板.cs" />
+    <Compile Include="仓储分板.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryObject.cs" />
+    <Compile Include="RFBase.cs" />
+    <Compile Include="RFException.cs" />
+    <Compile Include="RFService.cs" />
+    <Compile Include="收货上架.cs" />
+    <Compile Include="SqlDbHelper.cs" />
+    <Compile Include="StringUtil.cs" />
+    <Compile Include="主页面.cs" />
+    <Compile Include="用户登录.cs" />
+    <Compile Include="采购收货.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

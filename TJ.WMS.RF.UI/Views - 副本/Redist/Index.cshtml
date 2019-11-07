@@ -1,0 +1,112 @@
+﻿@{
+    ViewBag.Title = "退配收货";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<form id="frmRedist" action="/Redist/Detail" method="post">
+    <input id="hdPaperNO" name="hdPaperNO" type="hidden" value="" />
+</form>
+<form id="frmBatchRedist" action="/TPShelves/Detail" method="post">
+    <input id="hdPaperNO" name="hdPaperNO" type="hidden" value="" />
+    <input id="hdReceiptTypeID" name="hdReceiptTypeID" type="hidden" value="" />
+    <input id="hdBatchTypeID" name="hdBatchTypeID" type="hidden" value="" />
+</form>
+<div class="box">
+    <table cellspacing="1" cellpadding="0">
+        <tr>
+            <td class="title">退配单</td>
+            <td class="content">
+                <input type="text" name="txtPaperNO" id="txtPaperNO" class="tdInput" />
+            </td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtPaperNO").focus();
+        $("#txtPaperNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidatePaperNO();
+            }
+        }).blur();
+        $("#txtPaperNO").focus();
+        $("#txtPaperNO").select();
+    });
+function ValidatePaperNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden")
+    $("#Msg").html("");
+    var jqobj = $("#txtPaperNO");
+    var url = "/TPShelves/ValidatPaperNO";
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: 'ID=' + jqobj.val(),
+        success: function (data) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj[0].BatchTypeID == "0") {
+                            $("#Loading").css("visibility", "hidden");
+                            $("#frmRedist #hdPaperNO").val($("#txtPaperNO").val());
+                            $("#frmRedist #hdReceiptTypeID").val(dataObj[0].ReceiptTypeID);
+                            $("#frmRedist #hdBatchTypeID").val(dataObj[0].BatchTypeID);
+                            $("#frmRedist").submit();
+                            return
+                        }
+                        if (dataObj[0].BatchTypeID == "1") {
+                            $("#Loading").css("visibility", "hidden");
+                            window.location.href = "/TPShelves/Detail?PaperNO=" + $("#txtPaperNO").val() + "&ReceiptTypeID=" + dataObj[0].ReceiptTypeID + "&BatchTypeID=" + dataObj[0].BatchTypeID
+                            //$("#frmBatchRedist #hdPaperNO").val($("#txtPaperNO").val());
+                            //$("#frmBatchRedist #hdReceiptTypeID").val(dataObj[0].ReceiptTypeID);
+                            //$("#frmBatchRedist #hdBatchTypeID").val(dataObj[0].BatchTypeID);
+                            //$("#frmBatchRedist").submit();
+                            return
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible")
+                        $("#Msg").html("订单类型无效！");
+                        $("#txtPaperNO").focus();
+                        $("#txtPaperNO").select();
+                        return ;
+
+                    }
+                    else {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible")
+                        $("#Msg").html("数据显示异常！");
+                        $("#txtPaperNO").focus();
+                        $("#txtPaperNO").select();
+                        return;
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    $("#txtPaperNO").focus();
+                    $("#txtPaperNO").select();
+                    return;
+                }
+            }
+            //if (data != "") {
+            //    $("#Loading").css("visibility", "hidden");
+            //    $("#Msg").css("visibility", "visible")
+            //    $("#Msg").html(data);
+            //    $("#txtPaperNO").focus();
+            //    $("#txtPaperNO").select();
+            //    return false;
+            //}
+            //else {
+            //    $("#Loading").css("visibility", "hidden");
+            //    $("#hdPaperNO").val($("#txtPaperNO").val());
+            //    $("#frmRedistPC").submit();
+            //}
+
+        }
+    });
+}
+</script>
+

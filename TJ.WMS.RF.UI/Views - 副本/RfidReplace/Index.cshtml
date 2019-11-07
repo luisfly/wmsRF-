@@ -1,0 +1,365 @@
+﻿@{
+    ViewBag.Title = "商品换标";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<input id="hdselShipper" type="hidden" value="@ViewBag.selShipper" />
+<input id="hdselRfidDrives" type="hidden" value="@ViewBag.selRfidDrives" />
+<input id="hdGoodsID" type="hidden" value="" />
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">选择公司</td>
+            <td class="content">
+                <select id="selShipper"  class="tdInput"></select>
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarcode" name="txtBarcode" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品名称</td>
+            <td class="content" id="lblGoodsName"></td>
+        </tr>
+        <tr>
+            <td class="title">托盘编码</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">生产日期</td>
+            <td class="content">
+                <input id="txtProductDate" name="txtProductDate" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">RFID</td>
+            <td class="content" id="lblRFID"></td>
+        </tr>
+        <tr>
+            <td class="title">选择设备</td>
+            <td class="content">
+                <select id="selRfidDrivers"></select>
+                <input type="button" value="连接" id="btnConnect" onclick="onRfidConnect()" />
+
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="btn">
+    <input type="button" value="读取(F8)" id="btnRead" onclick="ReadRfid()" />
+    <input type="button" value="提交(F9)" id="btnOK" onclick="RfidReplaceApply()"/>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                QryRfidReplaceGoods();
+            }
+        });
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        });
+        $("#txtProductDate").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateProductDate();
+            }
+        })
+        $("#selRfidDrivers").keypress(function (e) {
+            if (e.which == 13) {
+                onRfidConnect();
+            }
+        });
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                ReadRfid();
+            }
+            else if (e.which == 120)//F9
+            {
+                RfidReplaceApply();
+            }
+        });
+        FillSelect();
+        $("#txtBarcode").focus();
+
+    });
+    function FillSelect() {
+        var list = $("#hdselShipper").val();
+        $("#selShipper").html(list);
+
+        list = $("#hdselRfidDrives").val();
+        $("#selRfidDrivers").html(list);
+    }
+    //连接或断开设备
+    function onRfidConnect() {
+        RfidData = null;
+        var bConnected = $("#btnConnect").val() != "连接" ? true : false;
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "visible");
+        if (!bConnected) {
+            $("#Msg").html("正在连接设备，请稍候...");
+        } else {
+            $("#Msg").html("正在断开设备，请稍候...");
+        }
+        $("#btnConnect").attr("disabled", true);
+        $("#selRfidDrivers").attr("disabled", true);
+        var url = "/RfidReplace/ConnectDriver";
+        var params = {
+            "bConnected": bConnected,
+            "ipAddr": $("#selRfidDrivers").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                //失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                if (!bConnected) {
+                    $("#btnConnect").removeAttr("disabled");
+                    $("#selRfidDrivers").removeAttr("disabled");
+                }
+                $("#btnConnect").focus();
+            }
+            else {
+                //通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                if (!bConnected) {
+                    $("#Msg").html("设备连接成功！");
+                    $("#btnConnect").val("断开");
+                    $("#btnRead").focus();
+
+                } else {
+                    $("#Msg").html("设备已断开连接！");
+                    $("#btnConnect").val("连接");
+                    $("#selRfidDrivers").removeAttr("disabled");
+                    $("#btnConnect").focus();
+                }
+            }
+            $("#btnConnect").removeAttr("disabled");
+        })
+    }
+    
+    //读取RFID
+    function ReadRfid() {
+        if ($("#btnConnect").val() == "连接") {
+            alert("请先连接RFID设备！");
+            $("#btnConnect").focus();
+            return;
+        }
+        $("#lblRFID").html("");
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "visible");
+        $("#Msg").html("正在读取数据，请稍候...");
+        url = "/RfidReplace/ReadRfid";
+        var params = { };
+        $.post(url, params, function (data, txtStatus) {
+            try {
+                var dataObj = eval(data);
+                //效验通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("读取标签成功，请确认提交！");
+                $("#lblRFID").html(dataObj[0]['RFID']);
+            } catch (exception) {
+                //效验失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#btnRead").focus();
+            }
+        })
+    }
+    //效验一下托盘号,非必录
+    function ValidateTrayNO() {
+        if ($("#txtTrayNO").val() == "") {
+            $("#txtProductDate").focus();
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/RfidReplace/ValidateTrayNO";
+        var params = {
+            "TrayNO": $("#txtTrayNO").val(),
+            "GoodsID": $("#hdGoodsID").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            try {
+                var dataObj = eval(data);
+                //效验通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#txtProductDate").val(dataObj[0]['ProductDate']);
+                $("#txtProductDate").focus();
+                $("#txtProductDate").select();
+            } catch (exception) {
+                //效验失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+        })
+    }
+    function ValidateProductDate() {
+        $("#Loading").css("visibility", "hidden");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        if ($("#txtProductDate").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("请输入日期");
+            return;
+        }
+        var dt = $("#txtProductDate").val();
+        dt = MyFormatDate(dt);
+        $("#txtProductDate").val(dt);
+        if ($("#Msg").html() != "") {
+            
+            $("#txtProductDate").select();
+        } else {
+            if ($("#btnConnect").val() == "连接") {
+                $("#selRfidDrivers").focus();
+            } else {
+                $("#btnRead").focus();
+            }
+        }
+        
+    }
+    //效验商品
+    function QryRfidReplaceGoods() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        $("#lblGoodsName").html("");
+        $("#lblRFID").html("");
+        $("#hdGoodsID").val("");
+        var url = "/RfidReplace/QryRfidReplaceGoods";
+        var params = {
+            "ShipperNO": $("#selShipper").val(),
+            "Barcode": $("#txtBarcode").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            try{
+                var dataObj = eval(data);
+                //效验通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#hdGoodsID").val(dataObj[0]["GoodsID"]);
+                $("#lblGoodsName").html(dataObj[0]["GoodsName"]);
+                $("#txtTrayNO").focus();
+            } catch (exception) {
+                //效验失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+            }
+        })
+    }
+    
+    //提交数据
+    function RfidReplaceApply() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/RfidReplace/RfidReplaceApply";
+        var params = {
+            "ShipperNO":$("#selShipper").val(),
+            "GoodsID": $("#hdGoodsID").val(),
+            "Barcode": $("#txtBarcode").val(),
+            "TrayNO": $("#txtTrayNO").val(),
+            "ProductDate": $("#txtProductDate").val(),
+            "RFID": $("#lblRFID").text()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                //通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功！");
+                $("#hdGoodsID").val("");
+                $("#lblGoodsName").html("");
+                $("#lblRFID").html("");
+                $("#txtTrayNO").val("");
+                $("#txtProductDate").val("");
+                $("#txtBarcode").focus();
+                $("#txtBarcode").select();
+            } else {
+                //失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+            }
+        })
+    }
+    function MyFormatDate(str) {
+        try {
+            $("#Msg").css("visibility", "hidden");
+            $("#Msg").html("");
+            var str1 = str
+            if (str == "") return;
+            if (str.length == 8) {
+                str = str.substr(0, 4) + "-" + str.substr(4, 2) + "-" + str.substr(6, 2);
+
+                if (!isDateString(str)) {
+                    $("#Msg").html("日期格式错误");
+                    $("#Msg").css("visibility", "visible");
+                    return str1;
+                } else
+                    return str;
+            }
+            else {
+                if (!isDateString(str)) {
+                    $("#Msg").html("日期格式错误");
+                    $("#Msg").css("visibility", "visible");
+                }
+                return str1;
+            }
+        }
+        catch (exception) {
+            $("#Msg").html("日期格式错误");
+            $("#Msg").css("visibility", "visible");
+            return str1;
+        }
+    }
+    function isDateString(sDate) {
+        var iaMonthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        var iaDate = new Array(3)
+        var year, month, day
+
+        if (arguments.length != 1) return false
+        iaDate = sDate.toString().split("-")
+        if (iaDate.length != 3) return false
+        if (iaDate[1].length > 2 || iaDate[2].length > 2) return false
+
+        year = parseFloat(iaDate[0])
+        month = parseFloat(iaDate[1])
+        day = parseFloat(iaDate[2])
+
+        if (year < 1900 || year > 2100) return false
+        if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) iaMonthDays[1] = 29;
+        if (month < 1 || month > 12) return false
+        if (day < 1 || day > iaMonthDays[month - 1]) return false
+        return true
+    }
+
+    function StrToDate(str) {
+
+        str = str.replace(/-/g, "/");
+        var date = new Date(str);
+        return date;
+    }
+</script>
+

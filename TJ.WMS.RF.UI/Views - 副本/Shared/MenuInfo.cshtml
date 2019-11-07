@@ -1,0 +1,20 @@
+﻿@if (Session["User_ID"] == null  )
+{ 
+    <h3 class="title">@Session["CompanyTitle"]</h3>
+}
+else
+{ 
+    if(Session["User_Name"]!=null)
+    {
+        <table cellspacing="1" cellpadding="0" width="100%">
+        <tr>
+          <td align="left" width="25%" style="font-size: 12px">@Session["User_Name"]</td>
+          <td align="center"><b>@ViewBag.Title</b></td>
+          <td align="right" width="25%" style="font-size: 12px"><a href="javascript:if(confirm('您确定要退出系统操作吗？'))location.href='/Home'">退出</a></td>
+        </tr>
+        </table>
+    <!--
+       <h3>@ViewBag.Title</h3> <a id="backMenu" href="/Menu">RF菜单</a> <a href="javascript:if(confirm('您确定要退出系统操作吗？'))location.href='/Home'">退出</a> <span id="loginUser">欢迎，@Session["User_Name"]  </span>
+    -->
+    }
+}

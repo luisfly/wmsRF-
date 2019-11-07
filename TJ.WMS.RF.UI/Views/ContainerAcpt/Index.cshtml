@@ -1,0 +1,73 @@
+﻿@{
+    ViewBag.Title = "载具回收";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+        <tr>
+          <td class="title">门店编码</td>
+          <td  class="content">
+             <input type="text" name="txtStoreNO" id="txtStoreNO" class="tdInput"/>
+          </td>
+       </tr>
+       <tr>
+          <td class="title">门店名称</td>
+          <td  class="content">
+          </td>
+       </tr>
+       <tr>
+          <td class="title">载具编码</td>
+          <td  class="content">
+             <input type="text" name="txtContainerNO" id="txtContainerNO" class="tdInput"/>
+          </td>
+       </tr>
+       <tr>
+          <td class="title">载具名称</td>
+          <td  class="content">
+          </td>
+       </tr>
+       <tr>
+          <td class="title">回收数量</td>
+          <td  class="content">
+             <input type="text" name="txtQty" id="txtQty" class="tdInput"/>
+          </td>
+       </tr>
+   </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        //$("#txtContainerNO").focus();
+        $("#txtContainerNO").keypress(function (e) {
+
+            if (e.which == 13) {
+                //window.focus();
+                ValidateContainerNO();
+            }
+        }).blur();
+        $("#txtContainerNO").focus();
+    })
+    function ValidateContainerNO() {
+        $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden");
+    $("#Msg").html("");
+    $.post("/ContainerAcpt/ValidateContainerNO",
+       {"ContainerNO":$("#txtContainerNO").val()},
+       function(data,txtStatus)
+       {
+           if (data != "") {
+               $("#Loading").css("visibility", "hidden");
+             $("#Msg").html(data);
+            $("#Msg").css("visibility","visible");
+            $("#txtContainerNO").select();
+         }
+         else {
+             $("#Loading").css("visibility", "hidden");
+             $("#Msg").html("载具回收成功！");
+             $("#Msg").css("visibility", "visible");
+             $("#txtContainerNO").val("")
+             $("#txtContainerNO").focus();
+        
+         }
+       });
+}
+</script>

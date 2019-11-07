@@ -1,0 +1,170 @@
+﻿@{
+    ViewBag.Title = "装车";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    DataTable dt = ViewBag.data;
+    Boolean dtEmpty = (dt == null || dt.Rows.Count == 0);
+
+}
+@using System.Data;
+<input id="dtEmpty" type="hidden" value="@dtEmpty" />
+@if (!dtEmpty)
+{
+    <div class="box">
+        <table cellpadding="0" cellspacing="1">
+            <tr>
+                <td class="title">装车单号</td>
+                <td class="content" id="lblPaperNO">@dt.Rows[0]["PaperNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">车牌号码</td>
+                <td class="content" id="lblPaperNO">@dt.Rows[0]["TruckNO"]</td>
+             </tr>
+            <tr>
+                <td class="title">司机名称</td>
+                <td class="content" id="lblPaperNO">@dt.Rows[0]["Driver"]</td>
+            </tr>
+            <tr>
+                <td class="title">装载号</td>
+                <td class="content">
+                    <input type="text" name="txtLoadNO" id="txtLoadNO" class="tdInput" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="btn">
+        <input type="button" value="完成(F8)" id="btnOver" onclick="RF_TruckLoadOver()" ; />
+        <input type="button" value="撤销(F9)" id="btnUnLoad" onclick="RF_TruckLoadUnLoad()" ; />
+        <!--
+        <input  type="button" value="载具录入(F7)" id="btnCntainerSend"onclick="CntainerSend()"; />
+        -->
+    </div>
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        if ($("#dtEmpty").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("装车单无效，正在跳转...");
+            Pause(this, 500); //调用暂停函数
+            this.NextStep = function () {
+                document.location.href = "/TruckLoading";
+            }
+        }
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnOver").click();
+            }
+            if (e.which == 120)//F9
+            {
+                $("#btnUnLoad").click();
+            }
+//            if (e.which == 118)//F7
+//            {
+//                $("#btnCntainerSend").click();
+//            }
+        });
+
+        $("#txtLoadNO").keypress(function (e) {
+            if (e.which == 13) {
+                RF_TruckLoadAdd();
+            }
+        }).blur();
+        $("#txtLoadNO").focus();
+    });
+
+
+    //=====================================================
+    function SetParmas() {
+        var params = {
+            "PaperNO": $("#lblPaperNO").text(),
+            "LoadNO": $("#txtLoadNO").val()
+        };
+        return params;
+    }
+
+    function RF_TruckLoadAdd() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/TruckLoading/RF_TruckLoadAdd";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtLoadNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功！");
+                $("#Msg").css("visibility", "visible");
+                $("#txtLoadNO").val("");
+                $("#txtLoadNO").focus();
+            }
+        });
+    }
+
+    function RF_TruckLoadOver() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/TruckLoading/RF_TruckLoadOver";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 300); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/TruckLoading";
+                }
+            }
+        });
+    }
+
+    function RF_TruckLoadUnLoad() {
+        window.location.href = "/TruckLoading/UnLoad?PaperNO=" + $("#lblPaperNO").text();
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>
+

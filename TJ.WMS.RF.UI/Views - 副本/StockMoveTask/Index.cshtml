@@ -1,0 +1,120 @@
+﻿@{
+    ViewBag.Title = "移仓任务";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .StdQuery table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .StdQuery table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<div class="btn">
+    <input type="button" value="刷新(F8)" id="btnQryPickTask" onclick="RF_QryMoveTask()" />
+</div>
+<div class="box">
+    <div style="height:2px">
+    </div>
+    <div class="StdQuery">
+        <table id="tbMainQuery">
+            <thead>
+                <tr></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).keydown(function (e) {
+        if (e.which == 119)//F8
+        {
+            RF_QryMoveTask();
+        }
+    });
+
+    //$("#btnQryPickTask").focus();
+    $(document).ready(function () {
+        RF_QryMoveTask();
+    });
+    function RF_QryMoveTask() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $.post("/StockMoveTask/RF_QryMoveTask",
+           {},
+           function (data, textStatus) {
+               var dataObj;
+               try {
+                   dataObj = eval(data);
+                   if (dataObj == undefined || dataObj.length <= 0) {
+                       //数据异常
+                       $("#tbMainQuery thead").html("");
+                       $("#tbMainQuery tbody").html("");
+                       $("#Loading").css("visibility", "hidden");
+                       $("#Msg").css("visibility", "visible");
+                       $("#Msg").html(data);
+                       return;
+                   }
+                   //var Count = null;
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   trString = "<tr>"
+                   trString += "<td>序号</td>";
+                   trString += "<td>单号</td>";
+                   trString += "<td>移出仓</td>";
+                   trString += "<td>移入仓</td>";
+                   trString += "</tr>"
+                   $("#tbMainQuery thead").append(trString);
+                   var trString = "";
+                   for (var index in dataObj) {
+                       trString = "<tr>"
+                       trString += "<td>" + dataObj[index]["Item"] + "</td>";
+                       trString += "<td><a href='/StockMoveTask/Detail?PaperNO=" + dataObj[index]['PaperNO'] + "'>" + dataObj[index]['PaperNO'] + "</a></td>";
+                       //trString += "<td><a href='#' onclick=SelectPaperNO('" + dataObj[index]['PaperNO'] + "')>" + dataObj[index]['PaperNO'] + "</a></td>";
+                       trString += "<td>" + dataObj[index]["FromStorageNO"] + "</td>";
+                       trString += "<td>" + dataObj[index]["ToStorageNO"] + "</td>";
+                       trString += "</tr>"
+                       if (trString != "<tr></tr>")
+                           $("#tbMainQuery tbody").append(trString);
+                       //Count = Count + 1;
+                   }
+                   //if (Count != null) {
+                   //    trString = "<tr>"
+                   //    trString += "<td>合计(" + Count + ")</td>";
+                   //    trString += "<td></td>";
+                   //    trString += "<td></td>";
+                   //    trString += "<td></td>";
+                   //    trString += "</tr>"
+                   //    $("#tbMainQuery tbody").append(trString);
+                   //}
+                   var color = "#ffeab3"
+                   $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                   /* 把背景色保存到属性中 */
+                   $("#tbMainQuery tr:odd").attr("bg", color);
+                   $("#tbMainQuery tr:even").attr("bg", "#fff");
+                   $("#Loading").css("visibility", "hidden");
+               }
+               catch (exception) {
+
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#Msg").css("visibility", "visible");
+                   $("#Msg").html(data);
+               }
+           }
+        )
+    }
+    function SelectPaperNO(PaperNO) {
+        window.location("/StockMoveTask/Detail?PaperNO="+PaperNO);
+    }
+</script>

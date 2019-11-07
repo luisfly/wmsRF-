@@ -1,0 +1,152 @@
+﻿@{
+    ViewBag.Title = "未复核查询";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+<style>
+    .OutBoxCheck table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .OutBoxCheck table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">出库箱编码</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">客户编码</td>
+            <td class="content" id="lblStoreNO"></td>
+        </tr>
+        <tr>
+            <td class="title">客户名称</td>
+            <td class="content" id="lblStoreDesc"></td>
+        </tr>
+        @*<tr>
+            <td class="title">订单</td>
+            <td class="content" id="lblOrderInfo"></td>
+        </tr>*@
+        @*<tr>
+            <td class="title">状态</td>
+            <td class="content" id="lblStatus"></td>
+        </tr>*@
+    </table>
+    <div style="height:2px">
+    </div>
+
+</div>
+
+
+<div class="OutBoxCheck">
+    <table id="tbMainQuery">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $("#txtTrayNO").keypress(function (e) {
+        if (e.which == 13) {
+            RFCratesQuery();
+        }
+    });
+    $("#txtTrayNO").focus();
+    function RFCratesQuery() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#lblStoreDesc").html("");
+        //$("#lblStatus").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+      //$("#lblOrderInfo").html("");
+        $.post("/CratesQuery/RFCratesQuery",
+           {
+               "TrayNO": $("#txtTrayNO").val()
+           },
+           function (data, textStatus) {
+               var dataObj;
+               try {
+                   dataObj = eval(data);
+                   if (dataObj == undefined || dataObj.length <= 0) {
+                       //数据异常
+                       $("#tbMainQuery thead").html("");
+                       $("#tbMainQuery tbody").html("");
+                       $("#Loading").css("visibility", "hidden");
+                       $("#Msg").css("visibility", "visible");
+                       $("#Msg").html(data);
+                       $("#txtTrayNO").select();
+                       return;
+                   } 
+                   $("#lblStoreNO").html(dataObj[0]["StoreNO"]);
+                   $("#lblStoreDesc").html(dataObj[0]["StoreDesc"]);
+                   //$("#lblStatus").html(dataObj[0]["Status"]);
+                   //$("#lblOrderInfo").html(dataObj[0]["OrderInfo"]);
+                   //var TotalQty = null;
+                   //var TotalCaseQty = null;
+                   //var Count = null;
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   trString = "<tr>"
+                   trString += "<td>集货位</td>";
+                   trString += "<td style='text-align: center;'>托盘/<br/><br/>生产日期</td>";
+                   trString += "<td style='text-align: center;'>商品条码/<br/>商品名称</td>";
+                   trString += "<td nowrap style='text-align: center;white-space:nowrap;word-break:nowrap'>数量</td>";
+                   //trString += "<td>箱数</td>";
+                   trString += "</tr>"
+                   $("#tbMainQuery thead").append(trString);
+                   var trString = "";
+                   for (var index in dataObj) {
+                       trString = "<tr>"
+                       trString += "<td>" + dataObj[index]['LocationNO'] + "</td>";
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['TrayNO'] + "</span><br/><br/>" + dataObj[index]['ProductDate'] + "</td>";
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['Barcode'] + "</span> <br/>" + dataObj[index]['GoodsDesc'] + "</td>";
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]["Qty"] + "(" + dataObj[index]['Unit'] + ")</td>";
+
+                       //trString += "<td>" + dataObj[index]["MainBarcode"] + "</td>";
+                       //trString += "<td>" + dataObj[index]["GoodsDesc"] + "</td>";
+                       //trString += "<td>" + dataObj[index]["CaseUnits"] + "</td>";
+                       //trString += "<td>" + dataObj[index]["Qty"] + "(" + dataObj[index]['Unit'] + ")</td>";
+                       trString += "</tr>"
+                       if (trString != "<tr></tr>")
+                           $("#tbMainQuery tbody").append(trString);
+                       //TotalQty = TotalQty + dataObj[index]["Qty"];
+                       //TotalCaseQty = TotalCaseQty + dataObj[index]["CaseQty"];
+                       //Count = Count + 1;
+                   }
+         
+                   var color = "#ffeab3"
+                   $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                   /* 把背景色保存到属性中 */
+                   $("#tbMainQuery tr:odd").attr("bg", color);
+                   $("#tbMainQuery tr:even").attr("bg", "#fff");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#txtTrayNO").select();
+               }
+               catch (exception) {
+
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#Msg").css("visibility", "visible");
+                   $("#Msg").html(data);
+                   $("#txtTrayNO").select();
+               }
+           }
+        )
+    }
+
+ 
+
+</script>

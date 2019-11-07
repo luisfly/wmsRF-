@@ -1,0 +1,175 @@
+﻿@{
+    ViewBag.Title = "人工上架";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@using  System.Data
+@model  DataTable
+<div class="box">
+   <table cellspacing="1" cellpadding="0">
+        <tr >
+           <td class="title">收货托盘</td>
+           <td class="content" ><input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput"  /></td>
+        </tr>
+       <tr>
+          <td class="title">目标储位</td>
+          <td class="content"><input id="txtLocationNO" name="txtLocationNO" type="text" class="tdInput" /></td>
+       </tr>
+  </table>
+</div>
+      <div class="detail">
+         <table style="display:none ;text-overflow:ellipsis; word-break:keep-all; overflow:hidden;" id="shelvesDetail" @*cellpadding="0px" cellspacing="1px" border="0px"*@ >
+           <thead>
+             <tr class="title">
+             <th>商品条码</th>
+             <th>商品名称</th>
+             <th>单位</th>
+             <th style='text-align:center;'>数量/<br />箱数</th>
+             </tr>
+           </thead>
+           <tbody>
+             @* <tr>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+                  <td>&nbsp;</td>
+              </tr>*@
+           </tbody>
+         </table>
+      </div>
+<script  type="text/javascript">
+    $(document).ready(function () {
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        $("#txtLocationNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateLocationNO();
+            }
+        }).blur();
+        $("#txtLocationNO").attr("disabled", "disabled");
+        $("#txtTrayNO").focus();
+    });
+
+function SetInputDisabled(index)
+{
+    var ip= $("input[type=text]");
+    var i=0;
+    ip.each(function () {
+        i++;
+        if (i == index) {
+            $(this).focus();
+            $(this).select();
+        }
+        if (i > index) {
+            $(this).attr("disabled", "disabled");
+        }
+        else {
+            $(this).attr("disabled", "")
+        }
+    })
+   
+}
+
+function ValidateTrayNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden");
+    $("#Msg").html("");
+    var jqobj = $("#txtTrayNO");
+    $.post("/Shelves/ValidateTrayNO",
+            { "TrayNO": jqobj.val() },
+            function (data, textStatus) {
+                if (data != "") {
+                    $("#Msg").css("visibility", "hidden");
+                    $("#Msg").html("");
+                    var dataObj;
+                    try {
+                        dataObj = eval(data);
+                        if (dataObj != undefined) {
+                            $("#shelvesDetail").css("display", "block");
+                            if (dataObj.length > 0) {
+                                var tmp = "<tr>";
+                                tmp += "<td>" + dataObj[0].Barcode;
+                                tmp += "</td>"
+                                tmp += "<td>" + dataObj[0].GoodsDesc;
+                                tmp += "</td>"
+                                tmp += "<td>" + dataObj[0].Unit;
+                                tmp += "</td>"
+                                tmp += "<td style='text-align:center;word-wrap: break-word; word-break: break-all;'>" + dataObj[0].Qty + "<br/>" + dataObj[0]['CaseSrcQty'];
+                                tmp += "</td>"
+                                tmp += "</tr>"
+                                $("#shelvesDetail tbody").html(tmp);
+                            }
+                            $("#Loading").css("visibility", "hidden");
+                            $("#txtLocationNO").attr("disabled", "");
+                            $("#txtLocationNO").focus();
+                            $("#txtLocationNO").select();
+                        }
+                    }
+                    catch (exception) {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#shelvesDetail tbody").html("");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        //SetInputDisabled(1);
+                        $("#txtTrayNO").focus();
+                        $("#txtTrayNO").select();
+                        $("#txtLocationNO").attr("disabled", "disabled");
+                        $("#txtLocationNO").val("");
+                    }
+                    return false;
+                }
+                else {
+                    $("#Msg").css("visibility", "hidden");
+                    $("#Msg").html("");
+                    // SetInputDisabled(2);
+                    $("#txtLocationNO").attr("disabled", "");
+                    $("#txtLocationNO").focus();
+                    $("#txtLocationNO").select();
+                }
+
+            }
+    );
+}
+function ValidateLocationNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden");
+    $("#Msg").html("");
+    var jqobj = $("#txtLocationNO");
+    $.post("/Shelves/ValidateLocationNO",
+            {"LocationNO": jqobj.val(),
+            "TrayNO": $("#txtTrayNO").val()},
+            function (data, textStatus) 
+            {
+                if (data != "") {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility","visible");
+                    $("#Msg").html(data);
+                    $("#txtLocationNO").focus();
+                    $("#txtLocationNO").select();
+                    return false;
+                }
+                else {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#shelvesDetail tbody").html("");
+                    $("#Msg").css("visibility","hidden");
+                    $("#Msg").html("");
+  $("#Msg").html("操作成功！上架位置为：" + $("#txtLocationNO").val());
+                    $("#txtTrayNO").val("");
+                    $("#txtLocationNO").val("");
+
+                   // $("#Msg").html("操作成功！");
+                    $("#Msg").css("visibility", "visible");
+                    $("#txtTrayNO").focus();
+                    $("#txtLocationNO").attr("disabled", "disabled");
+                    return true;
+                }
+                
+            }
+    );
+}
+</script>  
+
+

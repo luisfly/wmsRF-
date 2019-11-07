@@ -1,0 +1,272 @@
+﻿@{
+    ViewBag.Title = "退配收货";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+@model  TJ.WMS.RF.UI.Models.Redist
+
+ <div class="box">
+      <input id="hdPaperNO" type="hidden" value="@Model.PaperNO" />
+       <input id="hdTrayNO" type="hidden" value="@Model.TrayNO" />
+       <table>
+          <tr>
+             <td colspan="2" style="background-color:#c8e4fc; text-align:center;">@Model.PaperNO</td>
+          </tr>
+          <tr>
+             <td colspan="2" style="background-color:#c8e4fc; text-align:center;">@Model.Storeinfo</td>
+          </tr>
+           <tr>
+             <td colspan="2" id="DcacptQty" style="background-color:#c8e4fc; text-align:center;">
+               数量：<span id="lblShipQty"></span>  己收：<span id="lblSumQty"></span>
+             </td>
+          </tr>
+        <tr>
+           <td class="title">退配托盘</td>
+           @*<td class="content" id="lblTrayNo"></td>*@
+            <td class="contentText"><input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" value="@Model.TrayNO"/></td>
+        </tr>
+        <tr>
+           <td class="title">商品条码</td>
+           <td class="contentText"><input id="txtBarcode" name="txtBarcode" type="text" class="tdInput" /></td>
+        </tr>
+         <tr>
+           <td class="title">商品名称</td>
+           <td class="content" id="lblGoodsDesc"></td>
+        </tr>
+         <tr>
+           <td class="title">商品单位</td>
+           <td class="content" id="lblStdUnit"></td>
+        </tr>
+       <tr>
+          <td class="title">收货数量</td> 
+          <td class="contentText"><input id="txtQty" name="txtQty" type="text" style = "ime-mode:disabled"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" value="" />
+          </td>
+       </tr>
+       </table> 
+    </div>
+ <div class="btn"><input  type="button" value="保存(F8)" id="btnSave" onclick="Save()" /> <input id="btnOk"  type="button"   value="完成(F9)" /></div>
+ <script type="text/javascript">
+     $(document).ready(function () {
+         $(document).keydown(function (e) {
+             var elem = e.srcElement || e.target;
+             if (e.which == 119)//F8
+             {
+                 $("#btnSave").click();
+             }
+             if (e.which == 120)//F9
+             {
+                 $("#btnOk").click();
+             }
+         });
+         $("#txtTrayNO").keypress(function (e) {
+             if (e.which == 13) {
+                 // window.focus();
+                 ValidateTrayNO();
+             }
+         }).blur();
+         $("#txtBarcode").keypress(function (e) {
+             if (e.which == 13) {
+                 // window.focus();
+                 ValidateBarcode();
+             }
+         }).blur();
+         $("#txtQty").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 if ($("#txtQty").val() == "") {
+                     $("#Msg").html("请输入数量");
+                     $("#Msg").css("visibility", "visible")
+                  }
+                 else {
+                     $("#Msg").html("");
+                     $("#Msg").css("visibility", "hidden")
+                     Save(); 
+                 }
+             }
+         }).blur();
+         $("#btnSave").click(Save);
+         $("#btnOk").click(Over);
+         if ($("#txtTrayNO").val()==""){
+             $("#txtTrayNO").focus();
+         }else{
+             $("#txtTrayNO").attr("disabled", "disabled");
+             $("#txtBarcode").focus();
+         }
+             
+
+     })
+ function ValidateBarcode() {
+     $("#Loading").css("visibility", "visible");
+     $("#Msg").css("visibility", "hidden")
+     $("#Msg").html("");
+     $("#lblGoodsDesc").text("");
+     $("#lblShipQty").text("");
+     $("#lblSumQty").text("");
+     $("#lblStdUnit").text("");
+    var url="/Redist/ValidateBarcode";
+    var params={"model.PaperNO":$("#hdPaperNO").val(),
+    "model.Barcode":$("#txtBarcode").val()};
+    $.post(url, params, function (data, txtStatus) {
+        if (data != "") {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj == undefined) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html(data);
+                    $("#Msg").css("visibility", "visible");
+                    $("#txtBarcode").select();
+                    return false;
+                }
+                else {
+                    if (dataObj.length == 0) { return false; }
+                    for (var index in dataObj) {
+                        //$("#hdTrayNo").val(dataObj[index].TrayNO);
+                        //$("#lblTrayNo").text(dataObj[index].TrayNO);
+                        $("#lblGoodsDesc").html(dataObj[index].GoodsDesc);
+                        $("#lblShipQty").html(dataObj[index].ShipQty);
+                        $("#lblSumQty").html(dataObj[index].SumQty);
+                        $("#lblStdUnit").html(dataObj[index].Unit);
+                    }
+                    $("#Msg").html("");
+                    $("#Msg").css("visibility", "hidden");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#txtQty").select();
+                }
+            }
+            catch (exception) {
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#Loading").css("visibility", "hidden");
+                $("#txtBarcode").select();
+            }
+        }
+        else {
+            $("#Msg").html("");
+            $("#Msg").css("visibility", "hidden");
+            $("#Loading").css("visibility", "hidden");
+        }
+    });
+ }
+ function Save() {
+     $("#Loading").css("visibility", "visible");
+     $("#Msg").css("visibility", "hidden")
+     $("#Msg").html("");
+
+     if (isNaN($("#txtQty").val())) {
+         $("#Msg").html("数量必需输入为数值！");
+         $("#Msg").css("visibility", "visible");
+         $("#Loading").css("visibility", "hidden");
+         $("#txtQty").focus();
+         $("#txtQty").select();
+         return;
+     } 
+     if ($("#txtQty").val().split(".").length >= 2 && $("#txtQty").val().split(".")[1].length > 3) {
+         $("#Msg").html("输入小数不能超过3位！");
+         $("#Msg").css("visibility", "visible");
+         $("#Loading").css("visibility", "hidden");
+         $("#txtQty").focus();
+         $("#txtQty").select();
+         return;
+     }
+
+    var url="/Redist/Save";
+    var params={"model.PaperNO":$("#hdPaperNO").val(),
+    "model.Barcode":$("#txtBarcode").val(),
+    "model.Qty":$("#txtQty").val(), 
+    "model.TrayNO":$("#txtTrayNO").val()
+    };
+    $.post(url, params, function (data, txtStatus) {
+        if (data != "") {
+            $("#Msg").html(data);
+            $("#Msg").css("visibility", "visible");
+            $("#Loading").css("visibility", "hidden");
+            $("#txtQty").focus();
+            $("#txtQty").select();
+        }
+        else {
+            $("#Loading").css("visibility", "hidden");
+            //var sumQty = parseFloat($("#txtQty").val()) + parseFloat($("#lblSumQty").text());
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("收货成功！");
+            $("#lblSumQty").text($("#txtQty").val());
+            $("#txtQty").val("");
+            $("#txtTrayNO").attr("disabled", "disabled");
+
+            //if (isNaN(sumQty)) {
+            //return;
+            //}
+            //$("#lblSumQty").text(sumQty);
+            if (parseFloat($("#lblSumQty").text()) >= parseFloat($("#lblShipQty").text())) {
+                //============收货完成清空相应的数据============
+                $("#txtBarcode").val("");
+                $("#lblGoodsDesc").text("");
+                $("#lblShipQty").text("");
+                $("#lblSumQty").text("");
+                $("#lblStdUnit").text("");
+                $("#txtBarcode").focus();
+            } else {
+                $("#txtBarcode").select();
+            }
+
+        }
+    })
+ }
+ function Over()
+ {
+     $("#Loading").css("visibility", "visible");
+     $("#Msg").css("visibility", "hidden")
+     $("#Msg").html("");
+    var url="/Redist/Over";
+    var params={"model.PaperNO":$("#hdPaperNO").val(),
+    "model.Barcode":$("#txtBarcode").val(),
+    "model.Qty":$("#txtQty").val(), 
+    "model.TrayNO":$("#txtTrayNO").val()
+    };
+    $.post(url, params, function (data, txtStatus) {
+        if (data != "") {
+            $("#Msg").html(data);
+            $("#Msg").css("visibility", "visible");
+            $("#Loading").css("visibility", "hidden");
+        }
+        else {
+            $("#Msg").html("");
+            $("#Msg").css("visibility", "hidden");
+            $("#Loading").css("visibility", "hidden");
+            //window.navigate("/Redist");
+            document.location.href ="/Redist";
+        }
+    })
+ }
+ function ValidateTrayNO()
+ {
+     $("#Loading").css("visibility", "visible");
+     $("#Msg").css("visibility", "hidden")
+     $("#Msg").html("");
+     var url="/Redist/ValidateTrayNO";
+     var params={
+         "model.PaperNO":$("#hdPaperNO").val(),
+         "model.Barcode":$("#txtBarcode").val(),
+         "model.Qty":$("#txtQty").val(), 
+         "model.TrayNO":$("#txtTrayNO").val()
+     };
+     $.post(url, params, function (data, txtStatus) {
+         if (data != "") {
+             $("#Msg").html(data);
+             $("#Msg").css("visibility", "visible");
+             $("#Loading").css("visibility", "hidden");
+             $("#txtTrayNO").select();
+         }
+         else {
+             $("#Msg").html("");
+             $("#Msg").css("visibility", "hidden");
+             $("#Loading").css("visibility", "hidden");
+             $("#txtBarcode").focus();
+         }
+     })
+ }
+ </script> 
+
+
+

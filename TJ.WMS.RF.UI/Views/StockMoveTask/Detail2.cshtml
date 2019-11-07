@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "移仓上架";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    DataTable dt = ViewBag.data;
+    string dtEmpty = "false";
+    if (dt == null || dt.Rows.Count == 0)
+    {
+        dtEmpty = "true";
+    }
+    string PaperNO = Request.QueryString["PaperNO"] == null ? "" : Request.QueryString["PaperNO"].ToString();
+}
+@using System.Data;
+<style>
+    .StdQuery table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .StdQuery table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<input id="dtEmpty" type="hidden" value="@dtEmpty" />
+@if (dt != null && dt.Rows.Count > 0)
+{
+    <div class="box">
+        <table cellpadding="0" cellspacing="1">
+            <tr>
+                <td class="title">任务单号</td>
+                <td class="content" id="lblPaperNO" colspan="3">@PaperNO</td>
+            </tr>
+            <tr>
+                <td class="title">移出仓</td>
+                <td class="content" id="lblFromStorageNO" colspan="3">@dt.Rows[0]["FromStorageNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">移入仓</td>
+                <td class="content" id="lblToStorageNO" colspan="3">@dt.Rows[0]["ToStorageNO"].ToString()</td>
+            </tr>
+            <tr>
+                <td class="title">移仓托盘</td>
+                <td class="content" colspan="3">
+                    <input type="text" name="txtNewTrayNO" id="txtNewTrayNO" class="tdInput" />
+                </td>
+            </tr>
+            <tr>
+                <td class="title">目标储位</td>
+                <td class="content" colspan="3">
+                    <input type="text" name="txtToLocationNO" id="txtToLocationNO" class="tdInput" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="box">
+        <div style="height:2px">
+        </div>
+        <div class="StdQuery">
+            <table id="tbMainQuery">
+                <thead>
+                    <tr></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="box">
+        <h2>移仓上架完成，请返回！</h2>
+    </div>
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtNewTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateNewTrayNO();
+            }
+        }).blur();
+        $("#txtToLocationNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateToLocationNO();
+            }
+        }).blur();
+
+        $("#txtNewTrayNO").focus();
+    });
+
+
+    //=====================================================
+    function SetParmas(ParamName) {
+        var params = {
+            "model.ParamName": ParamName,
+            "model.PaperNO": $("#lblPaperNO").text(),
+            "model.ToStorageNO": $("#lblToStorageNO").text(),
+            "model.ToLocationNO": $("#txtToLocationNO").val(),
+            "model.NewTrayNO": $("#txtNewTrayNO").val()
+
+        };
+        return params;
+    }
+
+    function ValidateNewTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/StockMoveTask/RF_MoveStoragePut";
+        var param = SetParmas("NewTrayNO");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtNewTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").html("");
+                RF_QryMovePutGoods();//查询托盘明细
+                $("#txtToLocationNO").focus();
+            }
+        });
+    }
+
+    //显示移仓托盘明细
+    function RF_QryMovePutGoods() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        var url = "/StockMoveTask/RF_QryMovePutGoods";
+        var param = SetParmas("NewTrayNO");
+        $.post(url, param, function (data, txtStatus) {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj == undefined || dataObj.length <= 0) {
+                    //数据异常
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    return;
+                }
+                //var Count = null;
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                trString = "<tr>"
+                trString += "<td>条码</td>";
+                trString += "<td>生产日期</td>";
+                trString += "<td>数量</td>";
+                trString += "<td>商品</td>";
+                trString += "</tr>"
+                $("#tbMainQuery thead").append(trString);
+                var trString = "";
+                for (var index in dataObj) {
+                    trString = "<tr>"
+                    trString += "<td>" + dataObj[index]["Barcode"] + "</td>";
+                    trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]["ProductDate"] + "</td>";
+                    trString += "<td>" + dataObj[index]["MoveQty"] + "</td>";
+                    trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]["GoodsDesc"] + "</td>";
+                    trString += "</tr>"
+                    if (trString != "<tr></tr>")
+                        $("#tbMainQuery tbody").append(trString);
+                }
+                var color = "#ffeab3"
+                $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                /* 把背景色保存到属性中 */
+                $("#tbMainQuery tr:odd").attr("bg", color);
+                $("#tbMainQuery tr:even").attr("bg", "#fff");
+                $("#Loading").css("visibility", "hidden");
+                $("#txtToLocationNO").focus();
+            }
+            catch (exception) {
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+            }
+        })
+    }
+
+    function ValidateToLocationNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/StockMoveTask/RF_MoveStoragePut";
+        var param = SetParmas("ToLocationNO");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtToLocationNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功!");
+                $("#txtNewTrayNO").val("");
+                $("#txtToLocationNO").val("");
+                $("#txtNewTrayNO").focus();
+            }
+        });
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

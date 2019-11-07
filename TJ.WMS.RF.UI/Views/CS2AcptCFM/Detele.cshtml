@@ -1,0 +1,104 @@
+﻿@{
+    ViewBag.Title = "二步越库收货删除";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+
+
+@*<script src="@Url.Content("~/My97DatePicker/WdatePicker.js")" type="text/javascript"></script>*@
+<div class="box">
+    <input id="hdBillCode" type="hidden" value="@Html.Encode(ViewData["BillCode"])" />
+
+    <table cellspacing="1" cellpadding="0">
+        <tr>
+            <td colspan="2" style="background-color:#c8e4fc; text-align:center;"> @Html.Encode(ViewData["BillCode"])</td>
+        </tr>
+        <tr>
+            <td class="title">托盘编码</td>
+            <td class="content"><input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" /></td>
+        </tr>
+
+
+    </table>
+</div>
+<div class="btn">
+    <input type="button" id="btnDetele" onclick="ValidateTrayNO()" value="删除" />
+   
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        // ======================托盘编码=====================================
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+
+            }
+        }).blur();
+
+        $("#txtTrayNO").focus();
+    });
+
+
+
+    //========================
+    function ValidateTrayNO() {
+        if ($("#hdBillCode").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("单号不能为空");
+            $("#Msg").css("visibility", "visible");
+            return;
+        }
+        if ($("#txtTrayNO").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("托盘编码不能为空");
+            $("#Msg").css("visibility", "visible");
+            return;
+        }
+        var url = "/CS2AcptCFM/CS2AcptCFMDetele";
+        var params = {
+            "TrayNO": $("#txtTrayNO").val(),
+            "OrderNO": $("#hdBillCode").val()
+
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                $("#Msg").html("删除成功");
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").focus();
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+            }
+        });
+
+    }
+
+    //============================
+    function Over() {
+        var url = "/CS2AcptCFM/Over";
+        var params = { "TrayNO": $("#txtTrayNO").val(),
+            "Barcode": $("#txtBarcode").val(),
+            "OrderNO": $("#hdBillCode").val(),
+            "EffectiveDate": $("#txtEffectiveDate").val(),
+            "ProductDate": $("#txtProductDate").val(),
+            "Qty": $("#txtQty").val(),
+            "shelfLife": $("#hdShelfLife").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                window.location.href = '/CS2AcptCFM';
+            }
+            else {
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+            }
+        });
+    }
+    //======================================
+
+
+</script>

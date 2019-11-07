@@ -1,0 +1,121 @@
+﻿body,html,p,h3,div,ul,li,a{margin:0px;padding:0px;}
+ul{ list-style:none}
+body {font: normal 100% Helvetica, Arial, sans-serif; font-size:100%;}
+#header{line-height:30px; height:30px; width:100%; background-color:#c8e6ff; color:#FFF;}
+#header h3{display:block; float:left;}
+#header #loginUser{ float:left; color:Red;}
+#header #loginUser a{ margin-left:100px;}
+#header .BackNav{float:left; margin-left:5%}
+#header a{display:block; float:right;}
+#header a,#header a:hover{ text-decoration:underline;}
+#header h3.title{width:100px;background-color:#0074bd;color:#0099ff;}
+.title { line-height:30px; height:30px; width:100%; background-color:#0099ff; color:#FFF;}
+#content{width:95%;height:100%;border:solid  1px #b9daf7; }
+#content .spanTitle{
+     background:yellow; 
+     color:#000; 
+	 font-weight:bold; 
+	 line-height:20px;
+	 display:block;
+	 float:left;
+	 background:#c8e6ff;
+	 padding:5px 0px;
+	 width:100px;
+	  text-align:right;
+	 }
+  #content .contentText{ 
+     float:left; 
+	 width:80%;
+	 }
+ #content .contentText input{ margin:3px 0px; width:70%}
+  #content .contentText #txtBox{width:12%}
+  #content .contentText #txtQuantity{width:12%}
+  #content .contentText #txtSum{width:22%}
+
+.btn{ margin:5px 0px;}
+.btn input{ 
+   background-color:#0074bd; 
+   border-color:transparent;
+   color:#FFF;
+   width:35%;
+   }
+
+.btnMenu {
+    width:98%; float:left;
+    clear:right; margin:5px;
+    background-color:#0074bd; 
+    border-color:transparent;
+    color:#FFF;
+    text-align:center;
+}
+.menuLink{
+    }
+ a,a:hover{ text-decoration:none; color:#0373bf; }
+#msg{ border:solid  1px red;display:none}
+.errorMsg{ border:solid  1px red; visibility:hidden; width:100%;height:20px; margin-bottom:2px;}
+.box{font-size:100%;}
+.box table{background-color:#bbd9f5;}
+.box .title{width:70px; background-color:#c8e4fc; padding:0 5px; text-align:center;}
+.box .content{background-color:#fff; padding-left:5px;}
+.box .txt,.box .txt2{border:1px solid #333; font-size:12px;}
+.box .txt{width:90%;}
+.box .txt2{width:35%;}
+.box .btn{background-color:#0373bf; color:#fff; border:1px solid #99dcf9; font-size:100%;}
+
+.detail{font-size:14px;}
+.detail table{background-color:#bbd9f5; width:90%}
+.detail table tr.title th{background-color:#0373bf}
+.detail table td{background-color:#fff; padding:5px;}
+#contain{width:100%}
+#contain #header{ 
+  line-height:30px;
+  height:30px; width:100%; 
+  background-color:#0074bd; 
+  color:#FFF;}
+#header{zoom:1;}
+#contain #header h3{ float:left; display:block; background-color:#0074bd;color:#fff; width:200px;}
+#header #loginUser{float:right; padding-left:10px;}
+#header  a{  float:right;color:yellow; margin:0 10px}
+#backMenu{ display:none}
+.clear{clear:both}
+.clear:after{content:""; display:block; clear:both}
+#Menu{  border :0px red solid;}
+#Menu a{ 
+    width:80%;
+    font-size:12px;
+    border :1px #99dcf9 solid;
+    background :#D0F0FF;
+    line-height:20px;display:block;
+    margin:5px 0;
+    }
+#main{width:95%;height:100%;border:solid  1px #b9daf7; }
+#main .spanTitle{
+     color:#000; 
+	 font-weight:bold; 
+	 line-height:20px;
+	 display:block;
+	 float:left;
+	 background:#b9daf7;
+	 padding:5px 0px;
+	 width:100px;
+	 text-align:right;
+	 }
+#main .contentText{ 
+     float:left; 
+	 width:70%;
+	 }
+#main .contentText input{ width:100%;}
+#main .contentText input{ margin:3px 0px; width:70%}
+#main .contentText #txtBox{width:12%}
+#main .contentText #txtQuantity{width:12%}
+#main .contentText #txtSum{width:22%}
+.box{font-size:100%;}
+.box table{background-color:#bbd9f5;}
+.box .title{width:10%; background-color:#b9daf7; padding:0 5px; text-align:center;}
+.box .content{background-color:#fff; padding-left:5px;}
+.box .txt,
+.box .txt2{border:1px solid #333; font-size:12px;}
+.box .txt{width:80%;}
+.box .txt2{width:35%;}
+.box .btn{background-color:#0373bf; color:#fff; border:1px solid #99dcf9; font-size:100%;}
+

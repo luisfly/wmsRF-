@@ -1,0 +1,564 @@
+﻿@{
+    //ViewBag.Title = "零拣";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string LocationTypeID = ViewData["LocationTypeID"].ToString();
+    string AssignTypeID = ViewData["AssignTypeID"].ToString();
+    string BoxPickValidateBarcode = ViewData["BoxPickValidateBarcode"].ToString();//20161026 TIM 1.箱拣效验条码;2.箱拣不效验条码
+    string Assign = Request.QueryString["AssignTypeID"].ToString();//2017-03-14 TIM
+    switch (AssignTypeID)
+    {
+        case "2":
+            ViewBag.Title = "托拣";
+            break;
+        case "3":
+            ViewBag.Title = "箱拣";
+            break;
+        case "4":
+            ViewBag.Title = "零拣";
+            break;
+        default:
+            Response.Redirect("/Memu");
+            break;
+    }
+}
+<div class="box">
+    <input id="ToDoNO" type="hidden" value="@ViewData["ToDoNO"]" />
+    <input id="hdTrayNO" type="hidden" value="@ViewData["TrayNO"]" />
+    <input id="PaperNO" type="hidden" value="@ViewData["PaperNO"]" />
+    <input id="SrcQty" type="hidden" value="@ViewData["SrcQty"]" />
+    <input id="AssignTypeID" type="hidden" value="@AssignTypeID" />
+    <input id="Assign" type="hidden" value="@Assign" />
+    <input id="MinSrcQty" type="hidden" value="@ViewData["MinSrcQty"]" />
+    <input id="LocationTypeID" type="hidden" value="@LocationTypeID" />
+    <input id="BoxPickValidateBarcode" type="hidden" value="@BoxPickValidateBarcode" />
+    <!--AssignTypeID=2.托拣;3.箱拣;4.零拣;5.自动补货;6.手工移仓;7.全仓补货-->
+    <!--LocationTypeID=1.存储位;2.拣货位(无托盘);3.存储拣货位;4.特殊拣货位-->
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">客户</td>
+            <td class="content" id="StoreDesc">@ViewData["StoreDesc"]</td>
+        </tr>
+        <tr>
+            <th colspan="4">
+                <div class="" style="font-family: 宋体, Arial, Helvetica, sans-serif; font-size: 14px;">
+                    条码:<u id="Barcode">@ViewData["Barcode"]</u><br />
+                    <a id="GoodsDesc" style="color: #000000">@ViewData["GoodsDesc"]</a><br />
+                    (包装单位:<a id="CaseUnits" style="color: #000000">@ViewData["CaseUnits"]</a>)
+
+                </div>
+            </th>
+
+        </tr>
+        <tr>
+            <td class="title">出库箱</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">拣货储位</td>
+            <td class="content" id="lblFromLocationNO">@ViewData["FromLocationNO"]</td>
+        </tr>
+        <!--零拣、地堆箱拣、托拣不效验储位；只有拣货位箱拣才效验储位 TIM 2016-11-04 特殊仓不效验拣货位-->
+        @if ((@AssignTypeID == "3" && @LocationTypeID == "2") || (@AssignTypeID == "4" && @LocationTypeID != "4" && @BoxPickValidateBarcode != "1"))
+        {
+            <tr>
+                <td class="title">货位效验</td>
+                <td class="content">
+                    <input id="txtCheckLocationNO" name="txtCheckLocationNO" type="text" class="tdInput" />
+                </td>
+            </tr>
+        }
+        <!--4.零拣检验条码-->
+        <!--2.拣货位检验托盘；LocationTypeID=4.特殊拣货位,效验托盘-->
+        @if (@LocationTypeID != "2" || @LocationTypeID == "4")
+        {
+            <tr>
+                <td class="title">拣货托盘</td>
+                <td class="content" id="lblFromTrayNO">@ViewData["FromTrayNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">托盘效验</td>
+                <td class="content">
+                    <input id="txtCheckFromTrayNO" name="txtCheckFromTrayNO" type="text" class="tdInput" />
+                </td>
+            </tr>
+        }
+        @*@if (@AssignTypeID == "4" || @AssignTypeID == "3")2016-10-26 TIM 改为箱拣可控制不效验条码 *@
+        @if ((@AssignTypeID == "4" && @BoxPickValidateBarcode == "1") || (@AssignTypeID == "3" && @BoxPickValidateBarcode == "1"))
+        {
+            <tr>
+                <td class="title">条码效验</td>
+                <td class="content">
+                    <input id="txtBarcode" name="txtBarcode" type="text" class="tdInput" />
+                </td>
+            </tr>
+        }
+        <tr>
+            <td class="title">审批数量</td>
+            <td class="content" id="lblSrcQty">@ViewData["ShowPickQty"]@*（@ViewData["MinSrcQty"]个）*@</td>
+        </tr>
+        <!--2.托拣无需输入数量-->
+        @if (@AssignTypeID != "2")
+        {
+            <tr>
+                <td class="title">实拣数量</td>
+                <td class="content">
+                    <input id="txtDealQty" name="txtDealQty" type="text" class="tdInput" style="ime-mode:disabled;"
+                           onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                           onafterpaste="this.value=this.value.replace(/\D/g,'')" />
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="确认(F7)" id="btnOK" onclick="ValidateDealQty()" />
+    @if (@AssignTypeID != "2")
+    { //不是托拣任务才显示
+        <input type="button" value="跳过(F8)" id="btnNext" onclick="PickSkip();" />
+        <input type="button" value="提交出库箱(F9)" id="btnSubmitTrayNO" onclick="SubmitTrayNO()" />
+    }
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 118)//F7
+            {
+                $("#btnOK").click();
+            }
+            if (e.which == 119 && $("#AssignTypeID").val() != "2")//F8 不是托拣任务
+            {
+                $("#btnNext").click();
+            }
+            if (e.which == 120 && $("#AssignTypeID").val() != "2")//F9 不是托拣任务
+            {
+                $("#btnSubmitTrayNO").click();
+            }
+        });
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateTrayNO();
+            }
+        }).blur();
+        $("#txtCheckLocationNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateCheckLocationNO();
+            }
+        }).blur();
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode();
+            }
+        }).blur();
+        $("#txtDealQty").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateDealQty();
+            }
+        }).blur();
+        $("#txtCheckFromTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateFromTrayNO();
+            }
+        }).blur();
+
+        //设置focus  ViewData["TrayNO"].ToString()
+        $("#txtTrayNO").val($("#hdTrayNO").val());
+        if ($("#txtTrayNO").val() == "") {
+            $("#txtTrayNO").focus();
+        }
+        else {
+            switch ($("#AssignTypeID").val()) {
+                case "4": //零拣
+                    if ($("#LocationTypeID").val() == "4") { //特殊拣货位
+                        $("#txtCheckFromTrayNO").focus();
+                    } else {
+                        if ($("#BoxPickValidateBarcode").val() == "1") {
+                            $("#txtBarcode").focus();
+                        } else {
+                            $("#txtCheckLocationNO").focus();
+                        }
+                    }
+                    break;
+                case "3": //箱拣
+                    if ($("#LocationTypeID").val() == "2") {
+                        $("#txtCheckLocationNO").focus();
+                    }
+                    else {
+                        $("#txtCheckFromTrayNO").focus();
+                    }
+                    break;
+                case "2": //托拣
+                    $("#txtCheckFromTrayNO").focus();
+                    break;
+            }
+        }
+    });
+
+    function SetParams() {
+        var params = {
+            "model.ToTrayNO": $("#txtTrayNO").val(),
+            "model.ToDoNO": $("#ToDoNO").val(),
+            "model.PaperNO": $("#PaperNO").val(),
+            "model.FromLocationNO": $("#lblFromLocationNO").text(),
+            "model.CheckLocationNO": $("#txtCheckLocationNO").val(),
+            "model.Barcode": $("#Barcode").text(),
+            "model.PickBarcode": $("#txtBarcode").val(),
+            "model.DealQty": $("#txtDealQty").val(),
+            "model.AssignTypeID": $("#AssignTypeID").val(),
+            "model.CaseUnits": $("#CaseUnits").text(),
+            "model.MinSrcQty": $("#MinSrcQty").val(),
+            "model.LocationTypeID": $("#LocationTypeID").val(),
+            "model.FromTrayNO": $("#lblFromTrayNO").text(),
+            "model.CheckFromTrayNO": $("#txtCheckFromTrayNO").val(),
+            "model.BoxPickValidateBarcode": $("#BoxPickValidateBarcode").val()
+        }
+        return params;
+    }
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/ValidateTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden")
+
+                switch ($("#AssignTypeID").val()) {
+                    case "4": //零拣
+                        if ($("#LocationTypeID").val() == "4") {
+                            $("#txtCheckFromTrayNO").focus();
+                        } else {
+                            if ($("#BoxPickValidateBarcode").val() == "1") {
+                                $("#txtBarcode").focus();
+                            } else {
+                                $("#txtCheckLocationNO").focus();
+                            }
+                        }
+                        break;
+                    case "3": //箱拣
+                        if ($("#LocationTypeID").val() == "2") {
+                            $("#txtCheckLocationNO").focus();
+                        }
+                        else {
+                            $("#txtCheckFromTrayNO").focus();
+                        }
+                        break;
+                    case "2": //托拣
+                        $("#txtCheckFromTrayNO").focus();
+                        break;
+                }
+            }
+        })
+    }
+
+    function ValidateCheckLocationNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/ValidateCheckLocationNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtCheckLocationNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //$("#txtBarcode").attr("disabled", "");
+                //$("#txtBarcode").focus();
+                //<!--LocationTypeID=1.存储位;2.拣货位(无托盘);3.存储拣货位;4.特殊拣货位-->
+
+                if ($("#LocationTypeID").val() == "2") {
+                    $("#txtDealQty").attr("disabled", "");
+                    $("#txtDealQty").focus();
+                }
+                else {
+                    $("#txtCheckFromTrayNO").attr("disabled", "");
+                    $("#txtCheckFromTrayNO").focus();
+                }
+            }
+        })
+    }
+
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/ValidateBarcode";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtDealQty").attr("disabled", "");
+                $("#txtDealQty").focus();
+            }
+        })
+    }
+    //检验拣货托盘
+    function ValidateFromTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/ValidateFromTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtCheckFromTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //如果是2.托拣，则直接完成指令并提交出库箱
+                if ($("#AssignTypeID").val() == "2") {
+                    PickGoods();
+                }
+                else {
+                    //3.箱拣;4.零拣 2016-10-27 TIM 增加箱拣是否效验条码的控制
+                    if (($("#AssignTypeID").val() == "4" && $("#BoxPickValidateBarcode").val() == "1") ||
+                        ($("#AssignTypeID").val() == "3" && $("#BoxPickValidateBarcode").val() == "1")) {
+                        $("#txtBarcode").attr("disabled", "");
+                        $("#txtBarcode").focus();
+                    } else {
+                        $("#txtDealQty").focus();
+                    }
+
+                }
+            }
+        })
+    }
+
+    function ValidateDealQty() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/ValidateDealQty";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtDealQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden")
+                //$("#txtDealQty").attr("disabled", "");
+                //$("#txtDealQty").focus();
+                var DealQty = parseFloat($("#txtDealQty").val());
+                if (DealQty == 0) {
+                    //执行短拣，释放指令
+                    if (confirm("实拣数量为零,点击“取消”释放当前指令") == false) {
+                        PickRelease();
+                    }
+                    else {
+                        $("#txtDealQty").select();
+                    }
+                }
+                else {
+                    //提交拣货处理
+                    var SrcQty = parseFloat($("#SrcQty").val());
+                    if (DealQty < SrcQty && confirm("实拣数量小于审批数量,确定要拣货？") == false) {
+                        $("#txtDealQty").select();
+                        return false;
+                    }
+                    else {
+                        PickGoods();
+                    }
+                }
+            }
+        })
+    }
+    $("#txtDealQty").keyup(function (e) {
+        if (e.keyCode == 13) {
+            //if (!isNaN(parseFloat($("#txtProductNum").val()))) {
+            //    $(this).val(parseFloat($("#txtProductNum").val()));
+            //}
+            return;
+        }
+        var str = $("#txtDealQty").val();
+        if (str != "") {
+            var n = parseFloat(str);
+            if (str.split(".").length >= 2 && str.split(".")[1].length > 2) {
+                $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 2)) / 100.0);
+            } else
+                if (str.split(".").length >= 3) {
+                    $(this).val(n.toFixed(2));
+                }
+        }
+    }).focusout(function () {
+        $(this).keyup();
+    });
+    //提交拣货处理
+    function PickGoods() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/PickGoods";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (!((data == "false") || (data == "true") || (data == "continue"))) { //返回false则当前任务还有指令未完成；true则当前任务全部指令已完成;continue则当前任务中当前门店全部指令已完成
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtDealQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    if (data == "false") { //当前任务未完成，继续取指令
+                        document.location.href = "/PICK?AssignTypeID=" + $("#Assign").val();// + "&TrayNO=" + $("#txtTrayNO").val();
+                    }
+                    else { //当前任务已完成，跳转到提交出库箱
+                        alert("当前任务已完成，确认后提交出库箱");
+                        SubmitTrayNO(data);
+                    }
+                }
+            }
+        })
+    }
+    //提交0拣释放指令过程
+    function PickRelease() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/PickRelease";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (!((data == "false") || (data == "true") || (data == "continue"))) { //返回false则当前任务还有指令未完成；true则当前任务全部指令已完成
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtDealQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    if (data == "false") { //当前任务未完成，继续取指令
+                        document.location.href = "/PICK?AssignTypeID=" + $("#Assign").val()// + "&TrayNO=" + $("#txtTrayNO").val();
+                    }
+                    else { //当前任务已完成，跳转到提交出库箱
+                        alert("当前任务已完成，确认后提交出库箱");
+                        SubmitTrayNO(data);
+                    }
+                }
+            }
+        })
+    }
+    //跳过指令
+    function PickSkip() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/PickSkip";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/PICK?AssignTypeID=" + $("#Assign").val() //+ "&TrayNO=" + $("#txtTrayNO").val();
+                }
+            }
+        })
+    }
+    //提交出库箱
+    function SubmitTrayNO(Complete) {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/PICK/SubmitTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    if (Complete == "true") {
+                        window.location.href = "PICK/SubmitOverDialog?AssignTypeID=" + $("#Assign").val();
+                    }
+                    else {
+                        document.location.href = "/PICK?AssignTypeID=" + $("#Assign").val()// + "&TrayNO=" + $("#txtTrayNO").val();
+                    }
+                }
+            }
+        })
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

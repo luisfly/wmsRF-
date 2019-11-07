@@ -1,0 +1,504 @@
+﻿@*
+    修改：每次进入后只能操作一个原托盘与新托盘
+*@
+@{
+    ViewBag.Title = "仓储分板";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@using TJ.WMS.RF.UI.ViewModels
+@model TJ.WMS.RF.UI.ViewModels.MatchplateCCH
+<div class="box">
+    <input type="hidden" id="IsFirstSave" name="IsFirstSave" value="1" /> @*2016-11-03 TIM 控制是否为第一次录入*@
+    <input id="hdStorageTypeID" type="hidden" value="" />
+    <input id="hdLocationTypeID" type="hidden" value="" />
+    <input id="hdIsBoxPick" type="hidden" value="" />
+    <input id="hdGoodsID" type="hidden" value="" />
+    <input id="hdCaseUnit" type="hidden" value="" />
+    <table cellpadding="0" cellspacing="1px">
+        <tr>
+            <td class="title">原始托盘</td>
+            <td class="content">
+                <input id="txtOldTrayNO" name="txtOldTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">目标托盘</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarCode" name="txtBarCode" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">库存批号</td>
+            <td class="content">
+                <input id="txtStockBatchNO" name="txtStockBatchNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品名称</td>
+            <td class="content" id="">
+                <div id="lblGoodsName"></div>
+                <div style="font-weight:bold" id="lblProductDate"></div>
+                <div style="font-weight:bold" id="lblStockBatchNO"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="title">包装单位</td>
+            <td class="content" id="lblStockUnit"></td>
+        </tr>
+        <tr>
+            <td class="title">库存数量</td>
+            <td class="content" id="lblQty"></td>
+        </tr>
+        <tr>
+            <!--onkeypress="if((event.keyCode<48 || event.keyCode>57)) event.returnValue=false" -->
+            <td class="title" id="lblQtyCaption">分板个数</td>
+            <td class="content">
+                <input id="txtBoxQty" name="txtBoxQty" type="text" style="ime-mode:disabled"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">原储位</td>
+            <td class="content" id="lblOldLocationNO"></td>
+        </tr>
+        <tr>
+            <td class="title">目标储位</td>
+            <td class="content">
+                <input id="txtNewLocation" name="txtNewLocation" type="text" class="tdInput" />
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="复位(F8)" id="btnReload" onclick="Reload()" />
+</div>
+<div class="goodsquery">
+    <table id="tbMainQuery">
+        <thead>
+            <tr>
+                <!--           <td>序号</td>
+                               <td>生产日期</td>
+                               <td>批号</td>
+                               <td>当批数量</td>  -->
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                Reload();
+            }
+        });
+    $(document).ready(function () {
+        window.focus();
+        $("#txtTrayNO").attr("disabled", "disabled");
+        $("#txtBarCode").attr("disabled", "disabled");
+        $("#txtBoxQty").attr("disabled", "disabled");
+        $("#txtNewLocation").attr("disabled", "disabled");
+        $("#txtStockBatchNO").attr("disabled", "disabled");
+        //====================================================
+        $("#txtOldTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateOldTrayNO();
+            }
+        }).blur();
+        //====================================================
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateTrayNO();
+            }
+        }).blur();
+        //===========================================================
+        $("#txtBarCode").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateBarCode();
+            }
+        }).blur();
+        $("#txtStockBatchNO").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateStockBatchNO();
+            }
+        }).blur();
+        //============================================================
+        $("#txtBoxQty").keypress(function (e) {
+            if (e.which == 13) {
+                //window.focus();
+                ValidateAQty()
+            }
+        }).blur();
+
+        $("#txtBoxQty").keyup(function (e) {
+            if (e.keyCode == 13) {
+                if (!isNaN(parseFloat($("#txtBoxQty").val()))) {
+                    $(this).val(parseFloat($("#txtBoxQty").val()));
+                }
+                return;
+            }
+            var str = $("#txtBoxQty").val();
+            if (str != "") {
+                var n = parseFloat(str);
+                if (str.split(".").length >= 2 && str.split(".")[1].length > 3) {
+                    $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 3)) / 1000.0);
+                } else
+                    if (str.split(".").length >= 3) {
+                        $(this).val(n.toFixed(3));
+                    }
+            }
+        }).focusout(function () {
+            $(this).keyup();
+
+        });
+        $("#txtNewLocation").keypress(function (e) {
+
+            if (e.which == 13) {
+                //window.focus();
+                ValidateNewLocation();
+            }
+        }).blur();
+        $("#txtOldTrayNO").focus();
+    })
+  function SetInputDisabled(index)
+{
+    var ip= $("input[type=text]");
+    var i=0;
+    ip.each(function(){
+      i++;
+      if(i==index)
+      {
+        $(this).focus();
+      }
+      if(i>index)
+      {
+         $(this).attr("disabled","disabled");
+      }
+      else
+      {
+          $(this).attr("disabled","")
+      }
+    })
+
+  }
+  function Reload(){
+      location.href = "/MatchplateCCH";
+  }
+  function SetParams()
+  {
+      var  params={
+          "model.OldTrayNO":$("#txtOldTrayNO").val(),
+          "model.TrayNO":$("#txtTrayNO").val(),
+          "model.Barcode": $("#txtBarCode").val(),
+          "model.StorageTypeID": $("#hdStorageTypeID").val(),
+          "model.LocationTypeID": $("#hdLocationTypeID").val(),
+          "model.AQty":$("#txtBoxQty").val(),
+          "model.NewLocation":$("#txtNewLocation").val(),
+          "model.IsFirstSave":$("#IsFirstSave").val(),
+          "model.IsBoxPick":$("#hdIsBoxPick").val(),
+          "model.GoodsID": $("#hdGoodsID").val(),
+          "model.sStockBatchNO": $("#txtStockBatchNO").val()
+  };
+      return params;
+  }
+  function ValidateOldTrayNO() {
+      $("#Loading").css("visibility", "visible");
+      $("#Msg").css("visibility", "hidden")
+      $("#Msg").html("");
+     var url="/MatchplateCCH/ValidateOldTrayNO";
+     var params=SetParams();
+    $.post(url,params,function (data, textStatus){
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility","visible");
+                $("#Msg").html(data);
+                $("#txtTrayNO").attr("disabled", "disabled");
+                $("#txtBarCode").attr("disabled", "disabled");
+                $("#txtBoxQty").attr("disabled", "disabled");
+                $("#txtNewLocation").attr("disabled", "disabled");
+                $("#txtOldTrayNO").select();
+                return false;
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+               $("#Msg").css("visibility","hidden")
+               $("#Msg").html("");
+               $("#txtTrayNO").attr("disabled", "");
+               $("#txtBarCode").attr("disabled", "disabled");
+               $("#txtBoxQty").attr("disabled", "disabled");
+               $("#txtNewLocation").attr("disabled", "disabled");
+               $("#txtTrayNO").select();
+               return true;
+           }
+        });
+  }
+  function ValidateTrayNO() {
+
+      $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden")
+    $("#Msg").html("");
+   var url="/MatchplateCCH/ValidateTrayNO";
+   var params=SetParams();
+   $.post(url,params,function (data, textStatus) {
+         if (data != "") {
+             $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility","visible")
+            $("#Msg").html(data);
+            $("#txtTrayNO").attr("disabled", "");
+            $("#txtBarCode").attr("disabled", "disabled");
+            $("#txtBoxQty").attr("disabled", "disabled");
+            $("#txtNewLocation").attr("disabled", "disabled");
+            $("#txtTrayNO").select();
+            return false;
+        }
+        else {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("");
+            $("#Msg").css("visibility", "hidden");
+            $("#txtBarCode").attr("disabled", "");
+            $("#txtBoxQty").attr("disabled", "disabled");
+            $("#txtNewLocation").attr("disabled", "disabled");
+            $("#txtBarCode").select();
+            return true;
+        }
+    });
+  }
+  function ValidateBarCode() {
+      $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden")
+    $("#Msg").html("");
+    $("#lblGoodsName").text("");
+    $("#lblProductDate").text("");
+    $("#lblStockBatchNO").text("");
+    $("#lblStockUnit").text("");
+    $("#tbMainQuery thead").html("");
+    $("#tbMainQuery tbody").html("");
+   var url="/MatchplateCCH/ValidateBarCode";
+   var param=SetParams();
+   $.post(url, param, function (data, txtStatus) {
+       if (data != "") {
+           var dataObj;
+           try {
+               dataObj = eval(data);
+               if (dataObj != undefined) {
+                   if (dataObj.length < 0) return false;
+                   $("#lblGoodsName").html(dataObj[0].GoodsName);
+                   $("#lblStockUnit").html(dataObj[0].CaseUnits + "  【库存单位：" + dataObj[0].Unit + "】");
+                   
+                   $("#hdCaseUnit").val(dataObj[0].CaseUnits);
+                   $("#hdStorageTypeID").val(dataObj[0].StorageTypeID);
+                   $("#hdLocationTypeID").val(dataObj[0].LocationTypeID);
+                   $("#lblOldLocationNO").html(dataObj[0].OldLocationNO); //2016-10-31 TIM
+                   $("#hdIsBoxPick").val(dataObj[0].IsBoxPick);
+                   $("#hdGoodsID").val(dataObj[0].GoodsID);
+                   trString = "<tr>"
+                   trString += "<td>序号</td>";
+                   trString += "<td>生产日期</td>";
+                   trString += "<td>库存批号</td>";
+                   trString += "<td>可用</td>";
+                   trString += "<td>锁定</td>";
+                   trString += "</tr>"
+                   $("#tbMainQuery thead").append(trString);
+                   for (var index in dataObj) {
+                       trString = "<tr>"
+                       trString += "<td>" + dataObj[index]['Item'] + "</td>";
+                       trString += "<td>" + dataObj[index]['ProductDate'] + "</td>";
+                       //trString += "<td>" + dataObj[index]['StockBatchNO'] + "</td>";
+                       trString += "<td><a  href='#' onclick=SelectStockBatchNO('" + dataObj[index]['StockBatchNO'] + "'," + dataObj[index]['TotalQty'] + ")>" + dataObj[index]['StockBatchNO'] + "</a></td>";
+                       trString += "<td>" + dataObj[index]['TotalQty'] + "</td>";
+                       trString += "<td>" + dataObj[index]['LockQty'] + "</td>";
+                       trString += "</tr>"
+                       if (trString != "<tr></tr>")
+                           $("#tbMainQuery tbody").append(trString);
+                   }
+                   //if (($("#hdStorageTypeID").val() == "F") || ($("#hdStorageTypeID").val() == "R")|| ($("#hdStorageTypeID").val() == "E")
+                   //    ||($("#hdStorageTypeID").val() == "A" &&  $("#hdLocationTypeID").val()=="4") //TIM 2017-02-27 地堆特殊仓按个分
+                   //    ) {
+                   if ($("#hdIsBoxPick").val() == "0"){
+                       $("#lblQtyCaption").text("分板个数");
+                   }
+                   else {
+                       $("#lblQtyCaption").text("分板箱数");
+                   }
+                   $("#Loading").css("visibility", "hidden");
+                   $("#Msg").html("");
+                   $("#Msg").css("visibility", "hidden")
+                   //$("#txtBoxQty").attr("disabled", "");
+                   //$("#txtNewLocation").attr("disabled", "disabled");
+                   if (dataObj.length == 1) {
+                       //$("#lblProductDate").html(dataObj[index].ProductDate);
+                       $("#txtStockBatchNO").val(dataObj[0].StockBatchNO);
+                       $("#lblQty").html(dataObj[0].TotalQty + "  【箱数：" + dataObj[0].CaseQty + "】");
+                       $("#txtBoxQty").attr("disabled", "");
+                       $("#txtBoxQty").select();
+                   } else {
+                       $("#txtStockBatchNO").attr("disabled", "");
+                       $("#txtStockBatchNO").select();
+                   }
+                   
+                   return true;
+               }
+               return false;
+           }
+           catch (exception) {
+               $("#Loading").css("visibility", "hidden");
+               $("#Msg").css("visibility", "visible")
+               $("#Msg").html(data);
+               $("#txtNewLocation").attr("disabled", "disabled");
+               $("#txtBarCode").select();
+               $("#lblGoodsName").text("");
+               $("#lblProductDate").text("");
+               $("#lblStockBatchNO").text("");
+               $("#lblStockUnit").text("");
+               $("#lblQty").text("");
+               $("#hdStorageTypeID").val("");
+               $("#hdLocationTypeID").val("");
+               $("#hdGoodsID").val("");
+               return false;
+           }
+       }
+       else {
+           $("#Loading").css("visibility", "hidden");
+           $("#Msg").html("");
+           $("#Msg").css("visibility", "hidden")
+           $("#txtBoxQty").attr("disabled", "");
+           $("#txtBoxQty").select();
+           return true;
+       }
+   })
+  }
+  function ValidateStockBatchNO() {
+
+      $("#Loading").css("visibility", "visible");
+      $("#Msg").css("visibility", "hidden")
+      $("#Msg").html("");
+      $("#lblQty").html("");
+      var url = "/MatchplateCCH/ValidateStockBatchNO";
+      var params = SetParams();
+      $.post(url, params, function (data, textStatus) {
+          if (data != "") {
+              $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility", "visible")
+              $("#Msg").html(data);
+              $("#txtStockBatchNO").attr("disabled", "");
+              $("#txtStockBatchNO").select();
+              return false;
+          }
+          else {
+              $("#Loading").css("visibility", "hidden");
+              $("#Msg").html("");
+              $("#Msg").css("visibility", "hidden");
+              $("#txtBoxQty").attr("disabled", "");
+              //$("#txtBoxQty").val("");
+              //$("#txtBoxQty").select();
+              var tableId = document.getElementById("tbMainQuery");
+              for (var i = 1; i < tableId.rows.length; i++) {
+                  if ($("#txtStockBatchNO").val() == tableId.rows[i].cells[2].innerText) {
+                      SelectStockBatchNO($("#txtStockBatchNO").val(), tableId.rows[i].cells[3].innerText);
+                      return;
+                  }
+              }
+              return true;
+          }
+      });
+  }
+function ValidateAQty() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden")
+    $("#Msg").html("");
+   var url="/MatchplateCCH/ValidateAQty";
+   var param=SetParams();
+   $.post(url,param,function(data, textStatus){
+         if(data != "") {
+             $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility","visible")
+            $("#Msg").html(data);
+            $("#txtNewLocation").attr("disabled", "disabled");
+            $("#txtBoxQty").select();
+            return false;
+         }
+         else {
+             $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility","hidden")
+            $("#Msg").html("");
+            $("#txtNewLocation").attr("disabled", "");
+            $("#txtNewLocation").select();
+
+            return true;
+         }
+      }
+   )
+}
+function ValidateNewLocation() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden")
+    $("#Msg").html("");
+    var url="/MatchplateCCH/ValidateNewLocation";
+     var param=SetParams();
+    $.post(url,param,function(data, textStatus){
+           if(data != "") {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility","visible")
+              $("#Msg").html(data);
+              $("#txtNewLocation").select();
+              return false;
+           }
+          else {
+              $("#Loading").css("visibility", "hidden");
+               $("#Msg").html("操作成功！");
+               $("#Msg").css("visibility", "visible")
+               //$("#txtOldTrayNO").val("");
+               //$("#txtTrayNO").val("");
+               $("#txtBarCode").val("");
+               $("#txtBoxQty").val("");
+               $("#txtNewLocation").val("");
+               $("#lblGoodsName").text("");
+               $("#lblProductDate").text("");
+               $("#lblStockBatchNO").text("");
+               $("#lblStockUnit").text("");
+               $("#lblQty").text("");
+               $("#hdStorageTypeID").val("");
+               $("#hdLocationTypeID").val("");
+               $("#hdGoodsID").val("");
+               $("#lblOldLocationNO").text("");
+               $("#txtStockBatchNO").val("");
+               $("#hdCaseUnit").val("1");
+               //$("#txtOldTrayNO").focus();
+               $("#txtTrayNO").attr("disabled", "disabled");
+               //$("#txtBarCode").attr("disabled", "disabled");
+               $("#txtBoxQty").attr("disabled", "disabled");
+               $("#txtNewLocation").attr("disabled", "disabled");
+               $("#txtStockBatchNO").attr("disabled", "disabled");
+               $("#IsFirstSave").val("0");
+               //2016-11-04
+               $("#txtOldTrayNO").attr("disabled", "disabled");
+               $("#txtBarCode").focus();
+               $("#tbMainQuery thead").html("");
+               $("#tbMainQuery tbody").html("");
+              return true;
+            }
+      }
+   )
+}
+function SelectStockBatchNO(StockBatchNO, Qty) {
+    $("#txtStockBatchNO").val("");
+    $("#txtStockBatchNO").val(StockBatchNO);
+    var CaseQty = Qty / $("#hdCaseUnit").val();
+    $("#lblQty").html(Qty + " 【箱数：" + CaseQty.toFixed(3) + "】");
+    $("#txtBoxQty").attr("disabled", "");
+    $("#txtBoxQty").val("");
+    $("#txtBoxQty").select();
+}
+</script>

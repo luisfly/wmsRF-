@@ -1,0 +1,333 @@
+﻿@{
+    ViewBag.Title = "越库播种";
+    DataTable dt = ViewBag.data;
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+@using System.Data;
+<div class="box">
+    <input id="Item" type="hidden" value="@dt.Rows[0]["Item"]" />
+    <input id="hdOldStoreNO" type="hidden" value="@ViewData["StoreNO"]" />
+
+    <input id="hdOldBarcode" type="hidden" value="@ViewData["Barcode"]" />
+
+
+
+    @*<input id="hdBarcode" type="hidden" value="@dt.Rows[0]["Barcode"]" />*@
+    @*<input id="hdTrayNO" type="hidden" value="@dt.Rows[0]["OldTrayNO"]" />*@
+    @*<input id="hdStoreNO" type="hidden" value="@dt.Rows[0]["StoreNO"]" />*@
+    <input id="hdNeedSeedQty" type="hidden" value="@dt.Rows[0]["NeedSeedQty"]" />
+    <input id="PaperNO" type="hidden" value="@dt.Rows[0]["PaperNO"]" />
+    <input id="isCheckToStoreBarcode" type="hidden" value="@dt.Rows[0]["isCheckToStoreBarcode"]" />
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">门店</td>
+            <td class="content" id="lblStoreDesc">@dt.Rows[0]["StoreNO"].@dt.Rows[0]["StoreDesc"]</td>
+        </tr>
+        <tr>
+            <td class="title">越库托盘</td>
+            <td class="content" id="lblOldTrayNO">@dt.Rows[0]["TrayNO"]</td>
+        </tr>
+        <tr>
+            <th colspan="4">
+                <div class="" style="font-family: 宋体, Arial, Helvetica, sans-serif; font-size: 14px;">
+                    条码:<u id="Barcode">@dt.Rows[0]["Barcode"]</u><br />
+                    <a id="GoodsDesc" style="color: #000000">@dt.Rows[0]["GoodsDesc"]</a><br />
+                    (包装单位:<a id="CaseUnits" style="color: #000000">@dt.Rows[0]["CaseUnits"]</a>)
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <td class="title">总数量</td>
+            <td class="content" id="lalSrcQty">@dt.Rows[0]["SrcQty"] </td>
+        </tr>
+        <tr>
+            <td class="title">越库位</td>
+            <td class="content" id="lblPostion2">@dt.Rows[0]["Postion2"]</td>
+        </tr>
+        <tr>
+            <td class="title">效验越库位</td>
+            <td class="content">
+                <input type="text" name="txtPostion2" id="txtPostion2" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">效验条码</td>
+            <td class="content">
+                <input type="text" name="txtBarcode" id="txtBarcode" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">出库箱</td>
+            <td class="content">
+                <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">数量</td>
+            <td class="content" id="lblQty">@dt.Rows[0]["CaseQty"]箱 + @dt.Rows[0]["MoreQty"]个</td>
+        </tr>
+
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="确认(F8)" id="btnOK" onclick="PickGoods()" />
+    <input type="button" value="提交出库箱(F9)" id="btnSubmitTrayNO" onclick="window.location.href = '/Set';" />
+    <input type="button" value="返回" id="return" onclick="window.location.href = '/ToStore';" />
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                ValidateTrayNO();
+            }
+            if (e.which == 120)//F9
+            {
+                window.location.href = "/Set";
+            }
+
+        });
+
+
+        $("#txtPostion2").keypress(function (e) {
+            if (e.which == 13) {
+
+                ValidatePostion2();
+            }
+        }).blur();
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode();
+            }
+        }).blur();
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        if ($("#isCheckToStoreBarcode").val() == "0") {
+
+            $("#txtBarcode").val($("#hdOldBarcode").val())
+            $("#txtBarcode").attr("disabled", "disabled")
+        }
+        $("#txtPostion2").focus();
+        $("#txtPostion2").select();
+
+    });
+
+    function SetParams() {
+        var params = {
+            "model.PaperNO": $("#PaperNO").val(),
+            "model.Item": $("#Item").val(),
+            "model.OldTrayNO": $("#lblOldTrayNO").text(),
+            "model.Postion2": $("#txtPostion2").val(),
+            "model.TrayNO": $("#txtTrayNO").val(),
+            "model.SeedQty": $("#hdNeedSeedQty").val(),
+            "model.Barcode":$("#txtBarcode").val()
+
+        }
+        return params;
+    }
+
+    function ValidatePostion2() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidatePostion22";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtPostion2").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //$("#txtTrayNO").attr("disabled", "");
+                if ($("#isCheckToStoreBarcode").val() == "0") {
+                    $("#txtTrayNO").focus();
+                }
+                else {
+                    if ($("#hdOldStoreNO").val() == $("#hdStoreNO").val() && $("#hdOldBarcode").val() == $("#txtBarcode").val()) {
+
+                        $("#txtTrayNO").focus();
+                    }
+                    else {
+                        $("#txtBarcode").select();
+                    }
+                }
+
+            }
+        })
+    }
+
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidateBarcode";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //$("#txtTrayNO").attr("disabled", "");
+                $("#txtTrayNO").focus();
+            }
+        })
+    }
+
+
+    //验证出库箱并提交
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidateTrayNO2";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+
+    // Item  hdBarcode hdNeedSeedQty PaperNO isCheckToStoreBarcode
+    // StoreNO lblStoreDesc lblOldTrayNO Barcode GoodsDesc CaseUnits lalSrcQty lblPostion2  txtPostion2 txtBarcode txtTrayNO lblQty
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length < 0) return false;
+                        $("#Item").val(dataObj[0].Item);
+                        //$("#PaperNO").val(dataObj[0].PaperNO);
+                        $("#hdNeedSeedQty").val(dataObj[0].NeedSeedQty);
+                        $("#isCheckToStoreBarcode").val(dataObj[0].isCheckToStoreBarcode);
+                        // $("#hdOldStoreNO").val();
+
+                        $("#hdStoreNO").val(dataObj[0].StoreNO);
+                        $("#lblStoreDesc").html(dataObj[0].StoreNO+"."+dataObj[0].StoreDesc);
+                        $("#lblPostion2").html(dataObj[0].Postion2);
+                        $("#Barcode").html(dataObj[0].Barcode);
+                        $("#GoodsDesc").html(dataObj[0].GoodsDesc);
+                        $("#CaseUnits").html(dataObj[0].CaseUnits);
+                        $("#lalSrcQty").html(dataObj[0].SrcQty);
+                        $("#lblQty").html(dataObj[0].CaseQty + "箱" + dataObj[0].MoreQty + "个");
+
+                        $("#hdOldBarcode").val();
+
+                        $("#hdOldStoreNO").val();
+
+                        if ($("#isCheckToStoreBarcode").val() == "0") {
+
+                            $("#txtBarcode").val(dataObj[0].Barcode)
+                            $("#hdOldStoreNO").val(dataObj[0].Barcode)
+                            $("#txtBarcode").attr("disabled", "disabled")
+                            if ($("#hdOldStoreNO").val() == dataObj[0].StoreNO) {
+                                $("#txtPostion2").val($("#lblPostion2").text());
+                                $("#txtTrayNO").select();
+                            }
+                            else {
+                                $("#hdOldStoreNO").val(dataObj[0].StoreNO)
+                                $("#txtPostion2").focus();
+                                $("#txtPostion2").select();
+                            }
+                        }
+                        else {
+
+                            if ($("#hdOldStoreNO").val() == dataObj[0].StoreNO) {
+                                $("#txtPostion2").val($("#lblPostion2").text())
+                                if ($("#hdOldBarcode").val() == dataObj[0].Barcode) {
+                                    $("#txtBarcode").val(dataObj[0].Barcode)
+                                    $("#txtTrayNO").select();
+                                }
+                                else {
+                                    $("#txtBarcode").val(dataObj[0].Barcode)
+                                    $("#hdOldStoreNO").val(dataObj[0].Barcode)
+                                    $("#txtBarcode").select();
+                                }
+                            }
+                            else {
+                                $("#txtBarcode").val(dataObj[0].Barcode)
+                                $("#hdOldStoreNO").val(dataObj[0].Barcode)
+                                $("#txtPostion2").focus();
+                                $("#txtPostion2").select();
+                            }
+
+                        }
+
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    $("#txtTrayNO").select();
+                    return ;
+                }
+     }
+     else {
+         $("#Loading").css("visibility", "hidden");
+         $("#Msg").html("操作异常，请刷新重试");
+         $("#Msg").css("visibility", "visible")
+         $("#txtTrayNO").select();
+         return ;
+     }
+     //if (data != "") {
+     //           $("#Loading").css("visibility", "hidden");
+     //           $("#Msg").css("visibility", "visible")
+     //           $("#Msg").html(data);
+     //           $("#txtTrayNO").select();
+     //       }
+     //       else {
+     //           $("#Loading").css("visibility", "hidden");
+     //           $("#Msg").css("visibility", "visible");
+     //           $("#Msg").html("操作成功，正在跳转...");
+     //           Pause(this, 500); //调用暂停函数
+     //           this.NextStep = function () {
+     //               window.location.href = "/ToStore/Detail2?OldTrayNO=" + $("#lblOldTrayNO").text() + "&OldStoreNO=" + $("#hdStoreNO").val() + "&OldBarcode=" + $("#hdBarcode").val();
+     //           }
+     //       }
+        })
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

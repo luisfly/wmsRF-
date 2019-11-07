@@ -1,0 +1,183 @@
+﻿@{
+    ViewBag.Title = "装载";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<input id="hdPaperNO" type="hidden" value="" />
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+   <tr>
+      <td class="title">装载号</td>
+      <td  class="content">
+         <input type="text" name="txtLoadNO" id="txtLoadNO" class="tdInput"/>
+      </td>
+   </tr>
+    
+ </table>  
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtLoadNO").keypress(function (e) {
+            if (e.which == 13) {
+                QryLoadPaper();
+            }
+        }).blur();
+
+        $("#txtLoadNO").focus();
+
+    });
+
+    function SetParams() {
+        var params = {
+            "LoadNO": $("#txtLoadNO").val(),
+            "PaperNO": $("#hdPaperNO").val()
+        }
+        return params;
+    }
+
+    function QryLoadPaper() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var str = $("#txtLoadNO").val();
+        if (str.replace(/(^\s*)|(\s*$)/g, "").length == 0) {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("请录入装载号！");
+            $("#txtLoadNO").focus();
+            return;
+        }
+        var url = "/Load/QryLoadPaper";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj == undefined || dataObj.length <= 0) {
+                        //数据异常
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtLoadNO").select();
+                        return;
+                    }
+                    if (dataObj[0]['Succeed'] == 1) {
+                        //单据允许继续装载
+                        //$("#hdPaperNO").val(dataObj[0]['PaperNO']);
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("操作成功，正在跳转...");
+                        Pause(this, 300); //调用暂停函数
+                        this.NextStep = function () {
+                            window.location.href = "Load/Detail?PaperNO=" + dataObj[0]['PaperNO'];
+                        }
+                    } else {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("装载单无效，请检查！");
+                        $("#txtLoadNO").select();
+                    }
+                }
+                catch (exception) {
+                    //执行错误
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtLoadNO").select();
+                }
+            } else {
+                //新建单据
+                NewPaperNO();
+            }
+        })
+    }
+
+    //新建单据
+    function NewPaperNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/Load/NewPaperNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj == undefined || dataObj.length <= 0) {
+                        //数据异常
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtLoadNO").select();
+                        return;
+                    }
+                    if (dataObj[0]['isSuccess'] == 1) {
+                        //新建单据OK
+                        //$("#hdPaperNO").val(dataObj[0]['PaperNO']);
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("操作成功，正在跳转...");
+                        Pause(this, 300); //调用暂停函数
+                        this.NextStep = function () {
+                            window.location.href = "Load/Detail?PaperNO=" + dataObj[0]['sMessage'];
+                        }
+                    } else {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(dataObj[0]['sMessage']);
+                        $("#txtLoadNO").select();
+                    }
+                }
+                catch (exception) {
+                    //执行错误
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtLoadNO").select();
+                }
+            } else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("执行异常，请重试！");
+                $("#txtLoadNO").select();
+            }
+        })
+    }
+
+
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>
+

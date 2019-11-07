@@ -1,0 +1,450 @@
+﻿@{
+    ViewBag.Title = "移仓拣货";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    DataTable dt = ViewBag.data;
+    string dtEmpty = "false";
+    if (dt == null || dt.Rows.Count == 0)
+    {
+        dtEmpty = "true";
+    }
+    string PaperNO = Request.QueryString["PaperNO"] == null ? "" : Request.QueryString["PaperNO"].ToString();
+}
+@using System.Data;
+<style>
+    .StdQuery table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .StdQuery table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<input id="dtEmpty" type="hidden" value="@dtEmpty" />
+<input id="hdPaperNO" type="hidden" value="@PaperNO" />
+<input id="hdStockBatchNO" type="hidden" value="" />
+<input id="hdStockQty" type="hidden" value="" />
+@if (dt != null && dt.Rows.Count > 0)
+{
+    <input id="hdGoodsID" type="hidden" value="@dt.Rows[0]["GoodsID"]" />
+    <input id="hdProductDate" type="hidden" value="@dt.Rows[0]["ProductDate"]" />
+    <input id="hdFromStorageNO" type="hidden" value="@dt.Rows[0]["FromStorageNO"]" />
+    <div class="box">
+        <table cellpadding="0" cellspacing="1">
+            <tr>
+                <td class="title">任务单号</td>
+                <td class="content" id="lblPaperNO" colspan="3">@PaperNO</td>
+            </tr>
+            <tr>
+                <td class="title">移出仓</td>
+                <td class="content" id="lblFromStorageNO" colspan="3">@dt.Rows[0]["FromStorageNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">移入仓</td>
+                <td class="content" id="lblToStorageNO" colspan="3">@dt.Rows[0]["ToStorageNO"].ToString()</td>
+            </tr>
+            <tr>
+                <td class="title">移仓商品</td>
+                <td class="content" id="lblGoodsDesc" colspan="3">@Html.Raw(dt.Rows[0]["GoodsDesc"].ToString())</td>
+            </tr>
+            <tr>
+                <td class="title">申请数量</td>
+                <td class="content" id="lblApplyQty" width="50px">@Html.Raw(dt.Rows[0]["ApplyQty"].ToString())</td>
+                <td class=""align="right" width="55px">移仓数量</td>
+                <td class="content" id="lblMoveQty">@dt.Rows[0]["MoveQty"]</td>
+            </tr>
+            <tr>
+                <td class="title">拣货托盘</td>
+                <td class="content" colspan="3">
+                    <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" />
+                </td>
+            </tr>
+            <tr>
+                <td class="title">拣货数量</td>
+                <td class="content" colspan="3">
+                    <input type="text" name="txtPickQty" id="txtPickQty" class="tdInput" />
+                </td>
+            </tr>
+            <tr>
+                <td class="title">目标托盘</td>
+                <td class="content" colspan="3">
+                    <input type="text" name="txtNewTrayNO" id="txtNewTrayNO" class="tdInput" />
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <div class="btn">
+        <input type="button" value="确认(F8)" id="btnPick" onclick="RF_MoveStoragePick()" />
+        <input type="button" value="跳过(F9)" id="btnSkip" onclick="RF_MoveStoragSkip()" />
+        <!--<input type="button" value="刷新(F10)" id="btnRfresh" onclick="RF_QtyMoveGoodsDtl()" />-->
+        <input type="button" value="上架(F11)" id="btnOver" onclick="RF_MoveStoragePut()" />
+    </div>
+    <div class="box">
+        <div style="height:2px">
+        </div>
+        <div class="StdQuery">
+            <table id="tbMainQuery">
+                <thead>
+                    <tr></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="box">
+        <h2>拣货任务已完成，请移仓上架！</h2>
+    </div>
+    <div class="btn">
+        <input type="button" value="上架(F11)" id="btnOver" onclick="RF_MoveStoragePut()" />
+    </div>
+}
+<script type="text/javascript">
+    var RepeatApply = false;//控制是否重复提交，界面是否连接确认多次提交数据
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if ($("#dtEmpty").val() != "true") {
+                if (e.which == 119)//F8
+                {
+                    $("#btnPick").click();
+                }
+                if (e.which == 120)//F9
+                {
+                    $("#btnSkip").click();
+                }
+                if (e.which == 121)//F10
+                {
+                    $("#btnRfresh").click();
+                }
+            }
+            if (e.which == 122 && $("#dtEmpty").val() == "true")//F11
+            {
+                $("#btnOver").click();
+            }
+        });
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+        $("#txtPickQty").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePickQty();
+            }
+        }).blur();
+        $("#txtNewTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateNewTrayNO();
+            }
+        }).blur();
+
+        //alert($("#lblGoodsDesc").html());
+        if ($("#dtEmpty").val() != "true") {
+            RF_QtyMoveGoodsDtl();
+        }
+        $("#txtTrayNO").focus();
+    });
+
+
+    //=====================================================
+    function SetParmas(ParamName) {
+        var params = {
+            "model.ParamName": ParamName,
+            "model.PaperNO": $("#hdPaperNO").val(),
+            "model.GoodsID": $("#hdGoodsID").val(),
+            "model.ProductDate": $("#hdProductDate").val(),
+            "model.FromStorageNO": $("#hdFromStorageNO").val(),
+            "model.TrayNO": $("#txtTrayNO").val(),
+            "model.PickQty": $("#txtPickQty").val(),
+            "model.StockBatchNO": $("#hdStockBatchNO").val(),
+            "model.NewTrayNO": $("#txtNewTrayNO").val()//,
+            //"model.NewLocationNO": $("#txtNewLocationNO").val()
+            
+        };
+        return params;
+    }
+
+    //显示拣货托盘明细
+    function RF_QtyMoveGoodsDtl() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        var url = "/StockMoveTask/RF_QtyMoveGoodsDtl";
+        var param = SetParmas("");
+        $.post(url, param, function (data, txtStatus) {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj == undefined || dataObj.length <= 0) {
+                    //数据异常
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    return;
+                }
+                //var Count = null;
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                trString = "<tr>"
+                trString += "<td>储位</td>";
+                trString += "<td>托盘</td>";
+                trString += "<td>数量</td>";
+                trString += "<td>批次</td>";
+                trString += "<td>总量</td>";
+                trString += "</tr>"
+                $("#tbMainQuery thead").append(trString);
+                var trString = "";
+                for (var index in dataObj) {
+                    trString = "<tr>"
+                    trString += "<td>" + dataObj[index]["LocationNO"] + "</td>";
+                    trString += "<td>"+ dataObj[index]['TrayNO'] + "</td>";
+                    trString += "<td>" + dataObj[index]["Qty"] + "</td>";
+                    trString += "<td>" + dataObj[index]["StockBatchNO"] + "</td>";
+                    trString += "<td>" + dataObj[index]["StockQty"] + "</td>";
+                    trString += "</tr>"
+                    if (trString != "<tr></tr>")
+                        $("#tbMainQuery tbody").append(trString);
+                }
+                var color = "#ffeab3"
+                $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                /* 把背景色保存到属性中 */
+                $("#tbMainQuery tr:odd").attr("bg", color);
+                $("#tbMainQuery tr:even").attr("bg", "#fff");
+                $("#Loading").css("visibility", "hidden");
+                $("#txtTrayNO").focus();
+            }
+            catch (exception) {
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+            }
+        })
+    }
+
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#hdStockQty").val("");
+        $("#hdStockBatchNO").val("");
+        var url = "/StockMoveTask/ExecBusinessCheck";
+        var param = SetParmas("TrayNO");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                var tableId = document.getElementById("tbMainQuery");
+                for (var i = 1; i < tableId.rows.length; i++) {
+                    if ($("#txtTrayNO").val() == tableId.rows[i].cells[1].innerText) {
+                        //$("#lblLocationNO").text(tableId.rows[i].cells[0].innerText);
+                        $("#hdStockBatchNO").val(tableId.rows[i].cells[3].innerText);
+                        $("#hdStockQty").val(tableId.rows[i].cells[4].innerText);
+                        break;
+                    }
+                }
+                $("#Loading").css("visibility", "hidden");
+                if ($("#hdStockBatchNO").val() != "") {
+                    $("#txtPickQty").val("");
+                    $("#txtPickQty").select();
+                }
+                else {
+                    $("#Msg").html("操作异常，请刷新重试！");
+                    $("#Msg").css("visibility", "visible");
+                    $("#txtTrayNO").select();
+                }
+               
+               
+
+            }
+        });
+    }
+
+    function ValidatePickQty() {
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var PickQty = parseFloat($("#txtPickQty").val());
+        if (isNaN(PickQty) || (PickQty < 0)) {
+            $("#Msg").html("必需录入大于或等0的数值！");
+            $("#Msg").css("visibility", "visible");
+            $("#txtPickQty").select();
+            return;
+        }
+        if (PickQty == 0) {
+            //处理0拣货
+            RF_MoveStorageZero();
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        var url = "/StockMoveTask/ExecBusinessCheck";
+        var param = SetParmas("PickQty");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtPickQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#txtNewTrayNO").val("");
+                if (parseFloat($("#lblApplyQty").text()) == parseFloat($("#txtPickQty").val())
+                      && parseFloat($("#txtPickQty").val()) == parseFloat($("#hdStockQty").val())) {//一次性原托盘移仓
+                    $("#txtNewTrayNO").val($("#txtTrayNO").val());
+                }
+                $("#txtNewTrayNO").select();
+            }
+        });
+    }
+    //处理0拣货
+    function RF_MoveStorageZero() {
+        if (confirm("实拣数量为零,点击“取消”完成当前商品拣货！") == true) {
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/StockMoveTask/RF_MoveStorageZero";
+        var param = SetParmas("*");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtPickQty").select();
+            }
+            else {
+                ClearInputText();
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 100); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/StockMoveTask/Detail?PaperNO=" + $("#lblPaperNO").text();
+                }
+            }
+        });
+    }
+
+    function ValidateNewTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/StockMoveTask/ExecBusinessCheck";
+        var param = SetParmas("NewTrayNO");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtNewTrayNO").select();
+            }
+            else {
+                ClearInputText();
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 100); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/StockMoveTask/Detail?PaperNO=" + $("#lblPaperNO").text();
+                }
+            }
+        });
+    }
+ 
+    //跳过当前拣货
+    function RF_MoveStoragSkip() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/StockMoveTask/RF_MoveStoragSkip";
+        var param = SetParmas("*");
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                ClearInputText();
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 100); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/StockMoveTask/Detail?PaperNO=" + $("#lblPaperNO").text();
+                }
+            }
+        });
+    }
+    function RF_MoveStoragePut() {
+        $("#Loading").css("visibility", "hidden");
+        $("#Msg").css("visibility", "visible");
+        $("#Msg").html("操作成功，正在跳转...");
+        Pause(this, 100); //调用暂停函数
+        this.NextStep = function () {
+            document.location.href = "/StockMoveTask/Detail2?PaperNO=" + $("#hdPaperNO").val();
+        }
+    }
+
+    function ClearInputText() {
+        //$("#lblPaperNO").text("");
+        $("#hdGoodsID").val("");
+        $("#hdProductDate").val("");
+        $("#txtTrayNO").val("");
+        $("#txtPickQty").val("");
+        $("#txtNewTrayNO").val("");
+        $("#hdStockBatchNO").val("");
+        //$("#lblOutShipper").text("");
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

@@ -1,0 +1,128 @@
+﻿@{
+    ViewBag.Title = "二步未确认托盘查询";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+<style>
+    .TrayNOs table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .TrayNOs table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">订单号</td>
+            <td class="content">
+                <input id="txtPaperNO" name="txtPaperNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+    </table>
+    <div style="height:2px">
+    </div>
+</div>
+
+
+<div class="TrayNOs">
+    <table id="tbMainQuery">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtPaperNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePaperNO();
+            }
+        });
+        $("#txtPaperNO").focus();
+    });
+
+
+    
+    function ValidatePaperNO() {
+        if ($("#txtPaperNO").val() == "") {
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("订单号不能为空");
+            $("#txtPaperNO").focus();
+            $("#txtPaperNO").select();
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $.post("/CS2AcptCFMTrayQry/ValidatePaperNO",
+           {
+               "PaperNO": $("#txtPaperNO").val()
+           },
+           function (data, textStatus) {
+               var dataObj;
+               try {
+                   dataObj = eval(data);
+                   if (dataObj == undefined || dataObj.length <= 0) {
+                       //数据异常
+                       $("#tbMainQuery thead").html("");
+                       $("#tbMainQuery tbody").html("");
+                       $("#Loading").css("visibility", "hidden");
+                       $("#Msg").css("visibility", "visible");
+                       $("#Msg").html(data);
+                       $("#txtTrayNO").select();
+                       return;
+                   } 
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   trString = "<tr>"
+                   trString += "<td>托盘</td>";
+                   trString += "<td style='text-align: center;'>商品条码/<br/>商品名称</td>";
+                   trString += "<td nowrap style='text-align: center;white-space:nowrap;word-break:nowrap'>数量</td>";
+                   //trString += "<td>箱数</td>";
+                   trString += "</tr>"
+                   $("#tbMainQuery thead").append(trString);
+                   var trString = "";
+                   for (var index in dataObj) {
+                       trString = "<tr>"
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['TrayNO'] + "</span></td>";
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['Barcode'] + "</span> <br/>" + dataObj[index]['GoodsDesc'] + "</td>";
+                       trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]["Qty"] +"</td>"// "(" + dataObj[index]['Unit'] + ")</td>";
+
+                    
+                       trString += "</tr>"
+                       if (trString != "<tr></tr>")
+                           $("#tbMainQuery tbody").append(trString);
+                   }
+         
+                   var color = "#ffeab3"
+                   $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                   /* 把背景色保存到属性中 */
+                   $("#tbMainQuery tr:odd").attr("bg", color);
+                   $("#tbMainQuery tr:even").attr("bg", "#fff");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#txtPaperNO").select();
+               }
+               catch (exception) {
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#Msg").css("visibility", "visible");
+                   $("#Msg").html(data);
+                   $("#txtPaperNO").select();
+               }
+           }
+        )
+    }
+
+ 
+
+</script>

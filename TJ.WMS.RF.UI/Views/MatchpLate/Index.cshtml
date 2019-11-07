@@ -1,0 +1,277 @@
+﻿@{
+   
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="box">
+    <input id="IsCheckTrayNO" type="hidden" value="1" />
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">原始出库箱</td>
+            <td class="content">
+                <input id="txtOldTrayNO" name="txtOldTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">目标出库箱</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarcode" name="txtBarcode" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品信息</td>
+            <td class="content" id="lblGoodsInfo">
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品总数</td>
+            <td class="content" id="lblTotalQty"></td>
+        </tr>
+        <tr>
+            <td class="title">批号</td>
+            <td class="content">
+                <input id="txtStockBatchNO" name="txtStockBatchNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+        <tr>
+            <td class="title">实际数量</td>
+            <td class="content">
+                <input id="txtQty" name="txtQty" type="text" class="tdInput" 
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                           onafterpaste="this.value=this.value.replace(/\D/g,'')"/>
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="goodsquery">
+    <table id="tbMainQuery">
+        <thead>
+            <tr>
+                <!--           <td>序号</td>
+                               <td>生产日期</td>
+                               <td>批号</td>
+                               <td>当批数量</td>  -->
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtStockBatchNO").attr("disabled", "disabled");
+        $("#txtOldTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateOldTrayNO();
+            }
+        }).blur();
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode();
+            }
+        }).blur();
+
+        $("#txtQty").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateQty();
+            }
+        }).blur();
+
+        //设置focus
+        $("#txtOldTrayNO").focus();
+    });
+
+
+    function SetParams() {
+        var params =
+      {
+          "model.OldTrayNO": $("#txtOldTrayNO").val(),
+          "model.TrayNO": $("#txtTrayNO").val(),
+          "model.Barcode": $("#txtBarcode").val(),
+          "model.StockBatchNO": $("#txtStockBatchNO").val(),
+          "model.AQty": $("#txtQty").val(),
+          "model.IsCheckTrayNO": $("#IsCheckTrayNO").val(),
+      };
+        return params;
+    }
+
+    function ValidateOldTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $("#IsCheckTrayNO").val("1");
+        $("#txtStockBatchNO").html("");
+        var url = "/MatchpLate/ValidateOldTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtOldTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtTrayNO").focus();
+            }
+        }
+        )
+    }
+
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $("#IsCheckTrayNO").val("1");
+        var url = "/MatchpLate/ValidateTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtBarcode").focus();
+            }
+        }
+        )
+    }
+
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $("#txtStockBatchNO").val("");
+        var url = "/MatchpLate/ValidateBarcode";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length <= 0) { return false; }
+                        $("#lblTotalQty").html(dataObj[0].TotalQty);
+                        $("#lblGoodsInfo").html(dataObj[0].GoodsInfo);
+                        if (dataObj.length == 1) {
+                            $("#txtStockBatchNO").val(dataObj[0]["StockBatchNO"]);
+                        }
+                        trString = "<tr>"
+                        trString += "<td>序号</td>";
+                        trString += "<td>生产日期</td>";
+                        trString += "<td>批号</td>";
+                        trString += "<td>批次数量</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+                        for (var index in dataObj) {
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]['Item'] + "</td>";
+                            trString += "<td>" + dataObj[index]['ProductDate'] + "</td>";
+                            //trString += "<td>" + dataObj[index]['StockBatchNO'] + "</td>";
+                            trString += "<td><a  href='#' onclick=SelectStockBatchNO('" + dataObj[index]['StockBatchNO'] + "')>" + dataObj[index]['StockBatchNO'] + "</a></td>";
+                            trString += "<td>" + dataObj[index]['BatchQty'] + "</td>";
+                            trString += "</tr>"
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+                        }
+                        //for (var index in dataObj) {
+                        //    $("#lblTotalQty").text(dataObj[index].TotalQty);
+                        //}
+
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").html("");
+                        $("#txtQty").focus();
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    $("#txtBarcode").select();
+                    $("#lblTotalQty").text("");
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+                $("#lblTotalQty").text("");
+            }
+        }
+        )
+    }
+
+    function ValidateQty() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/MatchpLate/ValidateQty";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功!");
+                $("#Msg").css("visibility", "visible");
+                //$("#txtOldTrayNO").val("");
+                //$("#txtTrayNO").val("");
+                $("#txtBarcode").val("");
+                $("#txtQty").val("");
+                $("#lblTotalQty").text("");
+                $("#txtBarcode").focus();
+                $("#txtBarcode").select();
+                $("#IsCheckTrayNO").val("0");
+            }
+        }
+        )
+    }
+    $("#txtQty").keyup(function (e) {
+        if (e.keyCode == 13) {
+            return;
+        }
+        var str = $("#txtQty").val();
+        if (str != "") {
+            var n = parseFloat(str);
+            if (str.split(".").length >= 2 && str.split(".")[1].length > 3) {
+                $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 3)) / 1000.0);
+            } else
+                if (str.split(".").length >= 3) {
+                    $(this).val(n.toFixed(3));
+                }
+        }
+    }).focusout(function () {
+        $(this).keyup();
+    });
+    function SelectStockBatchNO(StockBatchNO) {
+        $("#txtStockBatchNO").val("");
+        $("#txtStockBatchNO").val(StockBatchNO);
+    }
+</script>

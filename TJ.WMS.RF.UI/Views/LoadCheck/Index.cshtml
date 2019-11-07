@@ -1,0 +1,547 @@
+﻿@{
+    ViewBag.Title = "装载复核";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    DataTable dt = ViewBag.data;
+    Boolean dtEmpty = (dt == null || dt.Rows.Count == 0);
+
+}
+@using System.Data;
+<input id="dtEmpty" type="hidden" value="@dtEmpty" />
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">装载号</td>
+            <td class="content">
+                <input type="text" name="txtLoadNO" id="txtLoadNO" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">配送类型</td>
+            <td class="content" id="lblProvTypeID"></td>
+        </tr>
+        <tr>
+            <td class="title">复核单号</td>
+            <td class="content" id="lblPaperNO"></td>
+        </tr>
+        <tr style="display:none">
+            <td class="title">门店编码</td>
+            <td class="content" id="lblStoreNO"></td>
+        </tr>
+        <tr style="display:none">
+            <td class="title">门店名称</td>
+            <td class="content" id="lblStoreName"></td>
+        </tr>
+
+        <tr>
+            <td class="title">已扫出库箱数</td>
+            <td class="content" id="lblTrayNum"></td>
+        </tr>
+        <tr>
+            <td class="title">出库箱号</td>
+            <td class="content">
+                <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">    
+                <input type="text" name="txtBarcode" id="txtBarcode" class="tdInput" />
+            </td>
+        </tr>   
+        <tr>
+            <td class="title">商品信息</td>
+            <td class="content" id="lblGoodsDesc"></td>
+        </tr>
+        <tr>
+            <td class="title">数量</td>
+            <td class="content" id="txtnQty">
+                <input type="text" name="txtCaseQty" id="txtCaseQty" class="tdInput" style="width: 40px"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" value="0" disabled />箱 +
+                <input type="text" name="txtQty2" id="txtQty2" class="tdInput" style="width: 40px"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" value="0" disabled />件
+            </td>
+        </tr>
+        <tr>
+            <td class="title">合计数量</td>
+            <td class="content">
+                <input type="text" name="txtQty" id="txtQty" class="tdInput" style="width: 50px"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" value="0" readonly />件
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="提交(F8)" id="btnOver" onclick="RF_LoadCheckOver()" ; />
+    <input type="button" value="确认数量" id="QtyConfirm" onclick="RF_LoadGoodsCheck('0')" style="visibility: hidden" />
+    <input type="button" value="返回" id="" onclick="window.location.href='/LoadCheck'" style="float:right" />
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        if ($("#dtEmpty").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("装载号无效，正在跳转...");
+            Pause(this, 500); //调用暂停函数
+            this.NextStep = function () {
+                document.location.href = "/LoadCheck";
+            }
+        }
+        // 按钮事件设计
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnOver").click();
+            }
+        });
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                RF_LoadCheckTrayAdd();
+            }
+        }).blur();
+
+        // 输入装载单号就进入创建相关信息的界面
+        $("#txtLoadNO").keypress(function (e) {
+            if (e.which == 13) {
+                NewPaperNO();
+            }
+        }).blur();
+
+        // 输入商品条码，自动获取商品信息，以及箱规
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                IndentifyBar();
+            }
+        }).blur();
+
+        // 数量转换
+        $("#txtCaseQty").keypress(function (e) {
+            if (e.which == 13) {
+                //NumChange();
+                RF_LoadGoodsCheck('0');
+            }
+        }).blur();
+
+        // 数量转换
+        $("#txtQty2").keypress(function (e) {
+            if (e.which == 13) {
+                //NumChange();
+                RF_LoadGoodsCheck('0');
+            }
+        }).blur();
+
+        $('#txtCaseQty').bind('input', function () {  //兼容IE9及以上版本和其他浏览器
+            NumChange();
+        });
+
+        $('#txtQty2').bind('input', function () {  //兼容IE9及以上版本和其他浏览器
+            NumChange();
+        });
+
+        $("#txtLoadNO").focus();
+    });
+
+
+    //=====================================================
+    // 配置 json 字符串
+    function SetParmas() {
+        var params;
+        params = {
+            "PaperNO": $("#lblPaperNO").text(),
+            "LoadNO": $("#txtLoadNO").val(),
+            "TrayNO": $("#txtTrayNO").val(),
+            "CheckQty": $("#txtQty").val(),
+            "Barcode": $("#txtBarcode").val()
+        };
+        return params;
+    }
+
+
+    // 装载复核明细增加
+    function RF_LoadCheckTrayAdd() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#txtBarcode").val("");
+        $("#lblGoodsDesc").html("");
+        $("#txtCaseQty").val("0");
+        $("#txtQty2").val("0");
+        $("#txtQty").val("0");
+        var url = "/LoadCheck/RF_LoadCheckTrayAdd";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            var dataObj = eval(data);
+            if (dataObj.sMessage != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(dataObj.sMessage);
+                //$("#txtTrayNO").val("");
+                $("#txtTrayNO").select();
+            }
+            else {
+                // 装载号复核未完成
+                /*if (dataObj.finish == 0) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html("操作成功！");
+                    $("#Msg").css("visibility", "visible");
+                    var TrayNum =  parseInt($('#lblTrayNum').text()) + 1;
+                    $('#lblTrayNum').html(TrayNum);
+                    $('#txtTrayNO').val("");
+                    $("#txtTrayNO").select();
+                    //window.location.reload();//刷新当前页面
+                } else {
+                    // 装载号下所有出库箱完成后，刷新页面，将处审核单号外所有编码清除掉
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html("操作成功！当前装载号所有出库箱已经扫描");
+                    Pause(this, 300); //调用暂停函数
+                    $("#Msg").css("visibility", "visible");
+
+                    $("#txtLoadNO").val("");
+                    $("#txtLoadNO").select();
+                    $("#txtTrayNO").val("");
+                    $('#lblStoreNO').html("");
+                    $('#lblStoreName').html("");
+                    $('#lblProvTypeID').html("");
+                    $('#lblTrayNum').html("");
+                    //window.location.reload();//刷新当前页面
+                }*/
+                // if ($("#lblStoreNO").text() == ""||$("#lblProvTypeID").text()=="") {
+                //    window.location.reload();//刷新当前页面
+                // }
+                // 出库箱完成扫描
+                if (dataObj.finish == 0) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html("操作成功！");
+                    $("#Msg").css("visibility", "visible");
+                    if (dataObj.Allfinish == '1') {
+                        var TrayNum = parseInt($('#lblTrayNum').text()) + 1;
+                        $('#lblTrayNum').html(TrayNum);
+                        $('#txtTrayNO').val("");
+                        $("#txtTrayNO").select();
+                    } else {
+                        $('#txtLoadNO').val("");
+                        $('#lblProvTypeID').html("");
+                        $('#txtTrayNO').val("");
+                        $('#lblTrayNum').html("0");
+                        $("#txtLoadNO").select();
+                    }
+                } else if (dataObj.finish == 1) {
+                    // 只需要输入数量的时候
+                    $("#Loading").css("visibility", "hidden");
+                    //$("#Msg").html("操作成功！");
+                    //$("#Msg").css("visibility", "visible");
+                    var TrayNum = parseInt($('#lblTrayNum').text()) + 1;
+                    // 删除属性允许输入
+                    $("#txtCaseQty").removeAttr("disabled");
+                    $("#txtQty2").removeAttr("disabled");
+
+                    $('#lblTrayNum').html(TrayNum);
+                    $("#txtBarcode").val(dataObj.Barcode);
+                    $("#lblGoodsDesc").html(dataObj.GoodsDesc);
+                    $("#txtCaseQty").select();
+                } else if (dataObj.finish == 2) {
+                    // 扫码输数量
+                    $("#Loading").css("visibility", "hidden");
+                    //$("#Msg").html("操作成功！");
+                    //$("#Msg").css("visibility", "visible");
+                    var TrayNum = parseInt($('#lblTrayNum').text()) + 1;
+                    // 删除属性允许输入
+                    //$("#txtCaseQty").removeAttr("disabled");
+                    //$("#txtQty2").removeAttr("disabled");
+                    //$("#txtBarcode").removeAttr("readonly");
+
+                    $('#lblTrayNum').html(TrayNum);
+                    $("#txtBarcode").html("");
+                    $("#txtQty").html("0");
+                    $("#txtBarcode").select();
+                } else {
+                    // 允许其跳过
+                    var r = confirm("当前出库箱为一步越库，是否默认全齐");
+                    if (r == true) {
+                        RF_LoadGoodsCheck('1');
+                        var TrayNum = parseInt($('#lblTrayNum').text()) + 1;
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").html("操作成功！");
+                        $("#Msg").css("visibility", "visible");
+                        $('#lblTrayNum').html(TrayNum);
+                        $('#txtTrayNO').val("");
+                        $("#txtTrayNO").select();
+                    } else {
+                        // 扫码输数量
+                        $("#Loading").css("visibility", "hidden");
+                        //$("#Msg").html("请扫描商品条码");
+                        //$("#Msg").css("visibility", "visible");
+                        var TrayNum = parseInt($('#lblTrayNum').text()) + 1;
+                        // 删除属性允许输入
+                        //$("#txtCaseQty").removeAttr("disabled");
+                        //$("#txtQty2").removeAttr("disabled");
+
+                        $('#lblTrayNum').html(TrayNum);
+                        $("#txtBarcode").html("");
+                        $("#txtQty").html("0");
+                        $("#txtBarcode").select();
+                    }
+                }
+            }
+        });
+    }
+
+    // 装载复核完成,已改
+    function RF_LoadCheckOver() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LoadCheck/RF_LoadCheckOver";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                if (!data.other) {
+                    var r = confirm(data.sMessage + "是否继续提交")
+                    if (r == true) {
+                        RF_LoadCheckContinue();
+                        return;
+                    }
+                }
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data.sMessage);
+                $("#txtLoadNO").select();
+            } else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 300); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/Menu";
+                }
+            }
+        });
+    }
+
+    // 当用户点击继续的时候继续插入操作，只是不进行查询和业务检查
+    function RF_LoadCheckContinue() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LoadCheck/RF_LoadCheckContinue";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 300); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/Menu";
+                }
+            }
+        });
+    }
+
+    //新建单据，操作者操作单据
+    function NewPaperNO() {
+        $("#Loading").css("visibility", "visible");
+        //$("#txtGoodsID").removeAttr("disabled");
+        //$("#txtGoodsNum").removeAttr("disabled");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        $("#txtTrayNO").val("");
+        $('#lblTrayNum').html('0');
+        $("#txtBarcode").val("");
+        $('#lblStoreNO').html("");
+        $('#lblStoreName').html("");
+        $('#lblProvTypeID').html("");
+        $('#lblTrayNum').html("");
+        $('#lblGoodsDesc').html("");
+        var url = "/LoadCheck/NewPaperNO";
+        var params = SetParmas();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                // json -> object
+                var dataObj = eval(data);
+                try {
+                    if (dataObj == undefined || dataObj.length <= 0 || !dataObj.isSuccess) {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(dataObj.sMessage);
+                        $("#txtLoadNO").select();
+                        return;
+                    }
+                    if (dataObj.finish == '1') {
+                        // 数据返回成功就在页面显示相关的信息
+                        var StoreNO = dataObj.StoreNO;
+                        var StoreDesc = dataObj.StoreDesc;
+                        var PaperNO = dataObj.PaperNO;
+                        var ProvTypeID = dataObj.ProvTypeID;
+                        var TrayNum = dataObj.TrayNum;
+                        $('#lblPaperNO').html(PaperNO);
+                        $('#lblStoreNO').html(StoreNO);
+                        $('#lblStoreName').html(StoreDesc);
+                        $('#lblProvTypeID').html(ProvTypeID);
+                        $('#lblTrayNum').html(TrayNum);
+                        $("#Loading").css("visibility", "hidden");
+                        // 选择出库箱文本框
+                        $("#txtTrayNO").select();
+                    } else {
+                        var PaperNO = dataObj.PaperNO;
+                        $('#lblPaperNO').html(PaperNO);
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("当前装载号已完成扫描");
+                        // 选择装载号文本框
+                        $("#txtLoadNO").select();
+                    }
+                }
+                catch (exception) {
+                    //执行错误
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtLoadNO").select();
+                }
+            } else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("执行异常，请重试！");
+                $("#txtLoadNO").select();
+            }
+        });
+    }
+
+    // 当箱数以及散数输入完成之后更新合计框中的总数
+    function RF_LoadGoodsCheck(condition)
+    {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LoadCheck/RF_LoadGoodsCheck";
+        var param = SetParmas();
+        param.condition = condition;
+        $.post(url, param, function (data, txtStatus) {
+            if (data.sMessage != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data.sMessage);
+                $("#txtBarcode").select();
+            } else {
+                $("#Loading").css("visibility", "hidden");
+                //$("#Msg").css("visibility", "visible");
+                //$("#Msg").html("操作成功");
+                $("#txtBarcode").val("");
+                $("#lblGoodsDesc").html("");
+                $("#txtCaseQty").val("0");
+                $("#txtQty2").val("0");
+                $("#txtQty").val("0");
+                // 添加属性禁止输入
+                $("#txtCaseQty").attr("disabled", true);
+                $("#txtQty2").attr("disabled", true);
+                $("QtyConfirm").attr("disabled",true);
+                if (data.Allfinish == '1') {
+                    if (data.finish == '0') {
+                        $("#txtTrayNO").select();
+                        $("#txtTrayNO").val("");
+                        $("#txtBarcode").val("");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("出库箱扫描完成");
+                    } else {
+                        $("#txtBarcode").select();
+                        $("#txtBarcode").val("");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("操作成功");
+                    }
+                } else {
+                    $("#txtTrayNO").val("");
+                    $("#txtBarcode").val("");
+                    $("#txtLoadNO").val("");
+                    $("#txtLoadNO").select();
+                    $('#lblProvTypeID').html("");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html("装载号扫描完成");
+                }
+            }
+        });
+    }
+
+    // 获取商品信息
+    function IndentifyBar() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#lblGoodsDesc").html("");
+        $("#txtCaseQty").val("0");
+        $("#txtQty2").val("0");
+        $("#txtQty").val("0");
+        var url = "/LoadCheck/RF_IndentifyBar";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data.sMessage != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data.sMessage);
+                $("#txtBarcode").select();
+            } else {
+                $("#Loading").css("visibility", "hidden");
+                $("#lblGoodsDesc").html(data.GoodsDesc);
+                // 删除属性允许输入
+                $("#txtCaseQty").removeAttr("disabled");
+                $("#txtQty2").removeAttr("disabled");
+                $("txtCaseQty").select();
+            }
+        });
+    }
+
+    // 根据输入的箱数和件数，自动转成相应的总件数
+    function NumChange() {
+        //$("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LoadCheck/RF_NumChange";
+        var param = SetParmas();
+        param.CaseQty = parseInt($("#txtCaseQty").val());
+        param.QtySg = parseInt($("#txtQty2").val());
+        $.post(url, param, function (data, txtStatus) {
+            $("#txtQty").val(data.total);
+        });
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

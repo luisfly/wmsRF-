@@ -1,0 +1,274 @@
+﻿@{
+    ViewBag.Title = "盘点任务";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string LocationNO = ViewData["LocationNO"].ToString();
+    string StorageTypeID = ViewData["StorageTypeID"].ToString();//C.零拣位，按个数盘点，C、B没有托盘
+    string LocationTypeID = ViewData["LocationTypeID"].ToString(); //2.拣货位，没有托盘,4.特殊仓
+
+    string QtyCaption = "盘点箱数";
+    //if (StorageTypeID == "C" || (StorageTypeID == "A" && LocationTypeID == "4"))
+    if (@ViewData["IsBoxInput"].ToString() == "0")
+    {
+        QtyCaption = "盘点个数";
+    }
+}
+<input id="hdLocationTypeID" type="hidden" value="@LocationTypeID" />
+<input id="hdInventoryNO" type="hidden" value="@ViewData["InventoryNO"]" />
+<input id="hdGoodsID" type="hidden" value="@ViewData["GoodsID"]" />
+<input id="hdStorageTypeID" type="hidden" value="@StorageTypeID" />
+<input id="hdStockQty" type="hidden" value="@ViewData["StockQty"]" />
+<input id="hdInputQty" type="hidden" value="" />
+<input id="hdIsBoxInput" type="hidden" value="@ViewData["IsBoxInput"]" />
+@if (LocationNO != "")
+{
+    <div class="box">
+        <table cellpadding="0" cellspacing="1">
+            <tr>
+                <td class="title">储位编码</td>
+                <td class="content" id="lblLocationNO">@ViewData["LocationNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">商品条码</td>
+                <td class="content" id="lblBarcode">@ViewData["Barcode"]</td>
+            </tr>
+            <tr>
+                <td class="title">商品名称</td>
+                <td class="content" id="lblGoodsName">@ViewData["GoodsName"]</td>
+            </tr>
+            <tr>
+                <td class="title">包装单位</td>
+                <td class="content" id="lblCaseUnits">@ViewData["CaseUnits"]
+                    <a href="#" id="lblUnit">【库存单位:@ViewData["Unit"]】</a>
+                </td>
+            </tr>
+            @if (LocationTypeID == "2")
+            {
+                <tr>
+                    <td class="title">效验储位</td>
+                    <td class="content">
+                        <input id="txtLocationNO" name="txtLocationNO" type="text" class="tdInput" />
+                    </td>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <td class="title">生产日期</td>
+                    <td class="content">@ViewData["ProductDate"]</td>
+                </tr>
+                <tr>
+                    <td class="title">批号</td>
+                    <td class="content">@ViewData["StockBatchNO"]</td>
+                </tr>
+                <tr>
+                    <td class="title">托盘编码</td>
+                    <td class="content" id="lblTrayNO">@ViewData["TrayNO"]</td>
+                </tr>
+                <tr>
+                    <td class="title">效验托盘</td>
+                    <td class="content">
+                        <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+                    </td>
+                </tr>
+            }
+            <tr>
+                <td class="title">@QtyCaption</td>
+                <td class="content">
+                    <input type="text" name="txtQty" id="txtQty" class="tdInput" style="ime-mode:disabled"
+                           onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                           onafterpaste="this.value=this.value.replace(/\D/g,'')" />
+                </td>
+            </tr>
+        </table>
+    </div>
+}
+else
+{
+    <br />
+    <div style="color: Red">没有盘点任务，尝试<a href="/InvTask">刷新</a>操作！</div>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtLocationNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateLocationNO();
+            }
+        }).blur();
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        $("#txtQty").keypress(function (e) {
+            if (e.which == 13) {
+                if (parseFloat($("#txtQty").val()) == parseFloat($("#hdStockQty").val()) && $("#hdInputQty").val() == "") {
+                    //第一次输入盘点数量与库存数量一致直接提交
+                    ValidateQty();
+                }
+                else {
+                    if (parseFloat($("#txtQty").val()) == parseFloat($("#hdInputQty").val())) {
+                        ValidateQty(); //连续输入两次则可提交
+                    }
+                    else {
+                        alert("请重新确认盘点数量！");
+                        $("#hdInputQty").val($("#txtQty").val());
+                        $("#txtQty").val("");
+                        $("#txtQty").focus();
+                    }
+                }
+            }
+        }).blur();
+        $("#txtQty").keyup(function (e) {
+            if (e.keyCode == 13) {
+                //if (!isNaN(parseFloat($("#txtProductNum").val()))) {
+                //    $(this).val(parseFloat($("#txtProductNum").val()));
+                //}
+                return;
+            }
+            var str = $("#txtQty").val();
+            if (str != "") {
+                var n = parseFloat(str);
+                if (str.split(".").length >= 2 && str.split(".")[1].length > 2) {
+                    $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 2)) / 100.0);
+                } else
+                    if (str.split(".").length >= 3) {
+                        $(this).val(n.toFixed(2));
+                    }
+            }
+        }).focusout(function () {
+            $(this).keyup();
+        });
+
+        if ($("#hdLocationTypeID").val() == "2") {
+            $("#txtLocationNO").focus();
+        }
+        else {
+            $("#txtTrayNO").focus();
+        }
+    })
+
+    function SetParams() {
+        var params =
+      {
+          "model.InventoryNO": $("#hdInventoryNO").val(),
+          "model.GoodsID": $("#hdGoodsID").val(),
+          "model.LocationTypeID": $("#hdLocationTypeID").val(),
+          "model.StorageTypeID": $("#hdStorageTypeID").val(),
+          "model.LocationNO": $("#txtLocationNO").val(),
+          "model.hdLocationNO": $("#lblLocationNO").text(),
+          "model.TrayNO": $("#txtTrayNO").val(),
+          "model.AQty": $("#txtQty").val(),
+          "model.OldLocationNO": $("#lblLocationNO").text(),
+          "model.OldTrayNO": $("#lblTrayNO").text(),
+          "model.IsBoxInput": $("#hdIsBoxInput").val()
+      };
+        return params;
+    }
+
+    function ValidateLocationNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/InvTask/ValidateLocationNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtLocationNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtQty").focus();
+            }
+        }
+      )
+    }
+
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/InvTask/ValidateTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtQty").focus();
+            }
+        }
+      )
+    }
+
+    function ValidateQty() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/InvTask/ValidateQty";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#SuccessMsg").css("visibility", "visible");
+                $("#SuccessMsg").html("操作成功，正在跳转...");
+                Pause(this, 100); //调用暂停函数
+                this.NextStep = function () {
+                    window.location.href = "/InvTask";
+                }
+            }
+        }
+      )
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

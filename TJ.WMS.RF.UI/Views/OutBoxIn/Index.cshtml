@@ -1,0 +1,151 @@
+﻿@{
+    ViewBag.Title = "出库装筐";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+ <div class="box">
+ <table cellpadding="0" cellspacing="1">
+        <tr>
+          <td class="title">胶筐码</td>
+          <td class="content">
+             <input id="txtContainerNO" name="txtContainerNO" type="text" class="tdInput"   />
+          </td>
+       </tr>
+       <tr>
+           <td class="title">出库箱号</td>
+           <td class="content">
+              <input id="txtTrayNO" name="txtTrayNO" type="text"  class="tdInput" />
+           </td>
+       </tr>
+ </table>
+ </div>
+ <script type="text/javascript">
+     $(document).ready(function () {
+         //SetInputDisabled(1);
+         $("#txtContainerNO").focus();
+         $("#txtContainerNO").attr("disabled", "");
+         $("#txtTrayNO").attr("disabled", "disabled");
+         $("#txtContainerNO").keypress(function (e) {
+             if (e.which == 13) {
+                 window.focus();
+             }
+         }).blur(ValidateContainerNO);
+         $("#txtTrayNO").keypress(function (e) {
+             if (e.which == 13) {
+                 // $(this).blur();
+                 ValidateTrayNO();
+             }
+         }).blur();
+
+     });
+function SetParams()
+{
+   var params={"model.TrayNO":$("#txtTrayNO").val(),
+      "model.ContainerNO":$("#txtContainerNO").val()};
+   return params;
+}
+function SetInputDisabled(index)
+{
+    var ip= $("input[type=text]");
+    var i=0;
+    ip.each(function(){
+      i++;
+      if(i==index)
+      {
+        $(this).focus();
+      }
+      if(i>index)
+      {
+         $(this).attr("disabled","disabled");
+      }
+      else
+      {
+          $(this).attr("disabled","")
+      }
+    })
+}
+function ValidateInput(id,url,isClear)
+{
+   var params=SetParams();
+    $.post(url,params,function(data,txtStatus)
+      {
+         if(data!="")
+         {
+           $("#Msg").html(data);
+           $("#Msg").css("visibility","visible");
+           $("#"+id).select();
+           return false;
+         }
+         else
+         {
+             $("#Msg").html("");
+             $("#Msg").css("visibility","hidden");
+             if(isClear)
+             {
+                $("#Msg").html("");
+                $("#txtTrayNO").val("");
+                $("#txtContainerNO").val("");
+                $("#txtContainerNO").select();
+             }
+             return true;
+         }
+      }
+   )
+}
+function ValidateContainerNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").html("");
+    $("#Msg").css("visibility", "hidden");
+   var url="/OutBoxIn/ValidateContainerNO";
+   var params=SetParams();
+   $.post(url, params, function (data, txtStatus) {
+       if (data != "") {
+           $("#Msg").html(data);
+           $("#Msg").css("visibility", "visible");
+           //SetInputDisabled(1);
+           $("#txtContainerNO").select();
+           $("#txtTrayNO").attr("disabled", "disabled");
+           $("#Loading").css("visibility", "hidden");
+           return false;
+       }
+       else {
+           $("#Loading").css("visibility", "hidden");
+           $("#Msg").html("");
+           $("#Msg").css("visibility", "hidden");
+           $("#txtTrayNO").attr("disabled", "");
+           $("#txtTrayNO").select();
+           //SetInputDisabled(2);
+       }
+       return true;
+   }
+   )
+}
+//=================================================
+function ValidateTrayNO() {
+    $("#Loading").css("visibility", "visible");
+     $("#Msg").html("");
+     $("#Msg").css("visibility", "hidden");
+   var url="/OutBoxIn/ValidateTrayNO";
+   var params=SetParams();
+   $.post(url, params, function (data, txtStatus) {
+       if (data != "") {
+           $("#Loading").css("visibility", "hidden");
+           $("#Msg").html(data);
+           $("#Msg").css("visibility", "visible");
+           $("#txtTrayNO").select();
+           // SetInputDisabled(2);
+       }
+       else {
+           $("#Loading").css("visibility", "hidden");
+           $("#Msg").html("操作成功！");
+           $("#Msg").css("visibility", "visible");
+           //SetInputDisabled(1);
+           $("#txtTrayNO").val("");
+           $("#txtContainerNO").val("");
+           $("#txtTrayNO").attr("disabled", "disabled");
+           $("#txtContainerNO").focus();
+       }
+   }
+   )
+}
+ </script>
+

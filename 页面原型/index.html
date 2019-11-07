@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<style type="text/css">
+body,html,h3,p{margin:0px; padding:0px;}
+#contain #header{ 
+  line-height:30px;
+  height:30px; width:100%; 
+  background-color:#0099ff; 
+  color:#FFF;}
+#contain #header h3{ float:left; display:block; background-color:#0099ff;color:#99dcf9; width:200px;}
+#header #loginUser{float:left;}
+#header  a{  float:right;color:yellow; margin:0 10px}
+#backMenu{ display:none}
+.clear{zoom:1;}
+.clear:after{content:""; display:block; clear:both}
+#main .spanTitle{
+     background:yellow; 
+     color:#000; 
+	 font-weight:bold; 
+	 line-height:20px;
+	 display:block;
+	 float:left;
+	 background:#c8e6ff;
+	 padding:5px 0px;
+	 width:100px;
+	  text-align:right;
+	 }
+#main .contentText{ 
+     float:left; 
+	 width:70%;
+	 }
+#main .contentText input{ width:100%;}
+#main .contentText input{ margin:3px 0px; width:70%}
+#main .contentText #txtBox{width:12%}
+#main .contentText #txtQuantity{width:12%}
+#main .contentText #txtSum{width:22%}
+</style>
+</head>
+<body>
+<div id="contain">
+   <div id="header">
+      <h3>集货分板</h3>
+      <span id="loginUser">欢迎,as4412</span> <a id="backMenu" href="/Menu">RF菜单</a> <a         href="javascript:if(confirm('您确定要退出系统操件吗？'))location.href='/Home'">退出
+         </a>
+   </div>
+   <div id="main">
+      <div class="row clear">
+         <span class="spanTitle">原始出库箱</span>
+         <div class="contentText">
+            <input id="txtTrayNO" name="txtTrayNO" type="text" /></div>
+         </div>
+      <div class="row clear">
+         <span class="spanTitle">目标出库箱</span>
+         <div class="contentText">
+            <input id="txtNewTrayNO" name="txtNewTrayNO" type="text" /></div>
+      </div>
+      <div class="row clear">
+         <span class="spanTitle">商品条码</span>
+         <div class="contentText">
+            <input id="txtBarcode" name="txtBarcode" type="text" /></div>
+      </div>
+      <div class="row clear">
+         <span class="spanTitle">商品总数</span>
+         <div class="contentText"></div>
+      </div>
+      <div class="row clear">
+         <span class="spanTitle">实际数量</span>
+         <div class="contentText">
+            <input id="txtQty" name="txtQty" type="text" /></div>
+      </div>
+   </div>
+</div>
+</body>
+</html>

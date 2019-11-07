@@ -1,0 +1,4 @@
+1.rfidlib_drv_rpan.dll复制到bin\Drivers
+2.rfidlib_reader.dll复制到c:\
+3.bthprops.cpl复制到windows\system32,并注册regsvr32 bthprops.cpl
+如果为32位驱动，IIS应用程序池启用32位应用程序

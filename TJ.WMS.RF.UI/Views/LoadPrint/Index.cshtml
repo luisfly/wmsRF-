@@ -1,0 +1,73 @@
+﻿@{
+    ViewBag.Title = "装载单打印";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+
+
+@*<script src="@Url.Content("~/My97DatePicker/WdatePicker.js")" type="text/javascript"></script>*@
+<div class="box">
+    <table cellspacing="1" cellpadding="0">
+        <tr>
+            <td class="title">装载号</td>
+            <td class="content"><input type="text" name="txtLoadNO" id="txtLoadNO" class="tdInput" /></td>
+        </tr>
+
+
+    </table>
+</div>
+<div class="btn">
+    <input type="button" id="btnPrint" onclick="Print()" value="确认" />
+   
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        // ======================托盘编码=====================================
+        $("#txtLoadNO").keypress(function (e) {
+            if (e.which == 13) {
+                Print();
+
+            }
+        }).blur();
+        $("#txtLoadNO").focus();
+    });
+
+
+
+    //========================
+    function Print() {
+        if ($("#txtLoadNO").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("装载号不能为空");
+            $("#Msg").css("visibility", "visible");
+            return;
+        }
+     
+        var url = "/LoadPrint/PrintTaskAdd";
+        var params = {
+            "LoadNO": $("#txtLoadNO").val(),
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                $("#Msg").html( $("#txtLoadNO").val()+"操作成功");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#txtLoadNO").focus();
+                $("#txtLoadNO").select();
+                $("#txtLoadNO").val("");
+            }
+            else {
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+            }
+        });
+
+    }
+
+ 
+
+
+</script>

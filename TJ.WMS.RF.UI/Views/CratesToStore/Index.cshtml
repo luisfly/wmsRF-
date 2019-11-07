@@ -1,0 +1,585 @@
+﻿@{
+    ViewBag.Title = "集货分播";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<input id="hdCaseUnit" type="hidden"  />
+<div class="box">
+    <input id="IsCheckTrayNO" type="hidden" value="1" />
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">原始出库箱</td>
+            <td class="content">
+                <input id="txtOldTrayNO" name="txtOldTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarcode" name="txtBarcode" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">库存批号</td>
+            <td class="content">
+                <input id="txtStockBatchNO" name="txtStockBatchNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">目标门店</td>
+            <td class="content">
+                <input id="txtStore" name="txtStore" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">目标出库箱</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="title">商品信息</td>
+            <td class="content" id="lblGoodsInfo">
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品总数</td>
+            <td class="content" id="lblTotalQty"></td>
+        </tr>
+        <tr>
+            <td class="title">待分播数量</td>
+            <td class="content" id="lblNeedSeedQty"></td>
+        </tr>
+        <tr>
+        <tr>
+            <td class="title">分播数量</td>
+            <td class="content">
+                <input type="text" name="txtCaseQty" id="txtCaseQty" class="tdInput" style="ime-mode:disabled;width: 40px"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" />箱 +
+                <input type="text" name="txtQty2" id="txtQty2" class="tdInput" style="width: 40px"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" value="0" />个<a href="#" id="lblUnit"></a>
+
+              
+
+            </td>
+        </tr>
+                <tr>
+            <td class="title">共</td>
+            <td class="content">
+
+                <input type="text" name="txtQty" id="txtQty" class="tdInput" style="width: 50px" disabled
+                       onKeypress="return (/[^\d\.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" />
+
+            </td>
+        </tr>
+        @*<tr>
+            <td class="title">分播数量</td>
+            <td class="content">
+                <input id="txtQty" name="txtQty" type="text" class="tdInput" 
+                onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                onafterpaste="this.value=this.value.replace(/\D/g,'')"/>
+            </td>
+        </tr>*@
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="清空" id="btnClear" onclick="Clear()" ; />
+</div>
+<div class="goodsquery">
+    <table id="tbMainQuery">
+        @*<thead>
+            <tr>
+                           <td>序号</td>
+                <td>门店</td>
+                               <td>生产日期</td>
+                               <td>批号</td>
+                               <td>拣货数量</td>  
+            </tr>
+        </thead>
+        <tbody></tbody>*@
+        <thead></thead>
+<tbody></tbody>
+    </table>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtStockBatchNO").attr("disabled", "disabled");
+        $("#txtStore").attr("disabled", "disabled");
+        $("#txtOldTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateOldTrayNO();
+            }
+        }).blur();
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode();
+            }
+        }).blur();
+
+        $("#txtStockBatchNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateStockBatchNO();
+            }
+        }).blur();
+
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+ 
+
+      
+
+        $("#txtQty").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateQty();
+            }
+        }).blur();
+
+        //设置focus
+        $("#txtOldTrayNO").focus();
+    });
+
+    $("#txtCaseQty").keypress(function (e) {
+        if (e.which == 13) {
+            $("#Msg").css("visibility", "hidden");
+            $("#Msg").html("");
+            if ($("#txtCaseQty").val() == "") {
+                $("#txtQty2").attr("disabled", "");
+                $("#txtCaseQty").val("0");
+                $("#txtQty2").focus();
+                $("#txtQty2").select();
+            }
+            else {
+                if (isNaN($("#txtCaseQty").val())) {
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html("请输入箱数！");
+                    $("#txtCaseQty").val("");
+                    $("#txtCaseQty").focus();
+                }
+                else {
+                    $("#txtQty2").attr("disabled", "");
+                    $("#txtQty2").focus();
+                    $("#txtQty2").select();
+                }
+            }
+        }
+    }).blur();
+
+    $("#txtCaseQty").keyup(function (e) {
+        //$("#Msg").css("visibility", "hidden");
+        //$("#Msg").html("")
+        if (e.keyCode == 13) {
+            return;
+        }
+        if (isNaN($("#txtCaseQty").val())) {
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("请输入箱数！");
+            $("#txtCaseQty").val("");
+            $("#txtCaseQty").focus();
+            return;
+        }
+        $("#txtQty").val("");
+        if ($("#txtCaseQty").val() != "") {
+            var n = parseFloat($("#txtCaseQty").val());;
+            $(this).val(n);
+            if (!isNaN(n)) {
+                var CaseUnits = parseFloat($("#hdCaseUnit").val());
+                var nv = (n * CaseUnits);
+                if ($("#txtQty2").val() != "")
+                    nv = nv + parseFloat($("#txtQty2").val());
+                $("#txtQty").val(nv);
+            }
+            else {
+                $("#txtQty").val("0");
+                $("#txtQty2").val("0");
+            }
+        }
+    }).focusout(function () {
+        $(this).keyup();
+
+    });
+    $("#txtQty2").keypress(function (e) {
+        if (e.which == 13) {
+
+            ValidateQty();
+        }
+    }).blur();
+
+    $("#txtQty2").keyup(function (e) {
+        if (e.keyCode == 13) {
+            //if (!isNaN(parseFloat($("#txtQty2").val()))) {
+            //    $(this).val(parseFloat($("#txtQty2").val()));
+            //}
+            return;
+        }
+        if ($("#txtQty2").val() != "") {
+            var n = parseFloat($("#txtQty2").val());
+            if ($("#txtQty2").val().split(".").length >= 2 && $("#txtQty2").val().split(".")[1].length > 3) {
+                var str = $("#txtQty2").val();
+                $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 3)) / 1000.0);
+            }
+            else if ($("#txtQty2").val().split(".").length >= 3) {
+                $(this).val(n.toFixed(3));
+            }
+            n = parseFloat($("#txtQty2").val());
+
+            if (!isNaN(n)) {
+                var CaseUnits = parseFloat($("#hdCaseUnit").val());
+                var nv = (parseFloat($("#txtCaseQty").val()) * CaseUnits);
+                nv = nv + n;
+                $("#txtQty").val(nv.toFixed(3));
+            }
+            else {
+                $("#txtQty2").val("");
+                $("#txtCaseQty").keyup();
+            }
+        }
+        else {
+            $("#txtCaseQty").keyup();
+        }
+    }).focusout(function () {
+        $(this).keyup();
+
+    });
+    function SetParams() {
+        var params =
+      {
+          "model.OldTrayNO": $("#txtOldTrayNO").val(),
+          "model.TrayNO": $("#txtTrayNO").val(),
+          "model.Barcode": $("#txtBarcode").val(),
+          "model.StockBatchNO": $("#txtStockBatchNO").val(),
+          "model.AQty": $("#txtQty").val(),
+          "model.Store": $("#txtStore").val()
+          
+         // "model.IsCheckTrayNO": $("#IsCheckTrayNO").val(),
+      };
+        return params;
+    }
+    function Clear() {
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $("#lblNeedSeedQty").html("");
+        $("#lblGoodsInfo").html("");
+        $("#lblTotalQty").html("");
+
+        $("#txtOldTrayNO").val("");
+        $("#txtStockBatchNO").val("");
+        $("#txtTrayNO").val("");
+        $("#txtStore").val("");
+        $("#txtBarcode").val("");
+        $("#txtQty").val("");
+        $("#txtOldTrayNO").select();
+    }
+
+    function ValidateOldTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        //$("#IsCheckTrayNO").val("1");
+        
+        $("#lblNeedSeedQty").html("");
+        $("#lblGoodsInfo").html("");
+        $("#lblTotalQty").html("");
+
+        $("#txtStockBatchNO").val("");
+        $("#txtTrayNO").val("");
+        $("#txtStore").val("");
+        $("#txtBarcode").val("");
+        $("#txtQty").val("");
+       // $("#txtQty").focus();
+       // $("#txtQty").select();
+        var url = "/CratesToStore/ValidateOldTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtOldTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtBarcode").focus();
+            }
+        }
+        )
+    }
+
+    function ValidateTrayNO() {
+        if ($("#txtStore").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("请选择分播门店");
+            $("#Msg").css("visibility", "visible");
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        //$("#IsCheckTrayNO").val("1");
+        var url = "/CratesToStore/ValidateTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtQty").focus();
+                $("#txtQty").select();
+            }
+        }
+        )
+    }
+
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+     
+
+        $("#lblNeedSeedQty").html("");
+        $("#lblGoodsInfo").html("");
+        $("#lblTotalQty").html("");
+
+        $("#txtStockBatchNO").val("");
+        $("#txtTrayNO").val("");
+        $("#txtStore").val("");
+    
+        $("#txtQty").val("");
+        var url = "/CratesToStore/ValidateBarcode";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length <= 0) { return false; }
+                        //$("#lblTotalQty").html(dataObj[0].TotalQty);
+                        $("#lblGoodsInfo").html(dataObj[0].GoodsInfo);
+                        $("#hdCaseUnit").val(dataObj[0].CaseUnits);
+                        alert(dataObj[0].CaseUnits)
+                        if (dataObj.length == 1) {
+                            $("#txtStockBatchNO").val(dataObj[0]["StockBatchNO"]);
+                            $("#lblTotalQty").html(dataObj[0]["BatchQty"]);
+                            ValidateStockBatchNO();
+                            return;
+                        }
+                        trString = "<tr>"
+                        trString += "<td>序号</td>";
+                        trString += "<td>生产日期</td>";
+                        trString += "<td>库存批号</td>";
+                        trString += "<td>批次数量</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+                        for (var index in dataObj) {
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]['Item'] + "</td>";
+                           trString += "<td>" + dataObj[index]['ProductDate'] + "</td>";
+                            //trString += "<td>" + dataObj[index]['ProductDate'] + "</td>";
+                           trString += "<td><a  href='#' onclick=SelectStockBatchNO('" + dataObj[index]['StockBatchNO'] + "','" + dataObj[index]['BatchQty'] + "')>" + dataObj[index]['StockBatchNO'] + "</a></td>";
+                            trString += "<td>" + dataObj[index]['BatchQty'] + "</td>";
+                            trString += "</tr>"
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").html("");
+                        //$("#txtQty").focus();
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    $("#txtBarcode").select();
+                    $("#lblTotalQty").text("");
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+                $("#lblTotalQty").text("");
+            }
+        }
+        )
+    }
+
+    function ValidateStockBatchNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $("#txtStore").val("");
+        var url = "/CratesToStore/GetStore";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length <= 0) { return false; }
+                        //$("#lblTotalQty").html(dataObj[0].TotalQty);
+                        //$("#lblGoodsInfo").html(dataObj[0].GoodsInfo);
+           
+                        trString = "<tr>"
+                        trString += "<td>序号</td>";
+                        trString += "<td>门店编码</td>";
+                        //trString += "<td>批号</td>";
+                        trString += "<td>门店名称</td>";
+                        trString += "<td>待分播数量</td>";
+                        trString += "<td>集货位</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+                        for (var index in dataObj) {
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]['Item'] + "</td>";
+                            trString += "<td>" + dataObj[index]['StoreNO'] + "</td>";
+                            trString += "<td><a  href='#' onclick=SelectStore('" + dataObj[index]['Store'] + "','" + dataObj[index]['NeedSeedQty'] + "')>" + dataObj[index]['StoreDesc'] + "</a></td>";
+
+                            //trString += "<td>" + dataObj[index]['StoreName'] + "</td>";
+                            //trString += "<td>" + dataObj[index]['ProductDate'] + "</td>";
+                          // trString += "<td><a  href='#' onclick=SelectProductDate('" + dataObj[index]['ProductDate'] + "')>" + dataObj[index]['ProductDate'] + "</a></td>";
+                            trString += "<td>" + dataObj[index]['NeedSeedQty'] + "</td>";
+                            trString += "<td>" + dataObj[index]['Postion1'] + "</td>";
+                            trString += "</tr>"
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+                        }
+
+                        if (dataObj.length == 1) {
+                            $("#txtStore").val(dataObj[0]["Store"]);
+                            $("#lblNeedSeedQty").html(dataObj[0]["NeedSeedQty"]);
+                            $("#txtTrayNO").focus();
+                            $("#txtTrayNO").select();
+                            // return;
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").html("");
+                        //$("#txtQty").focus();
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    $("#txtBarcode").select();
+                    $("#lblTotalQty").text("");
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#lblTotalQty").text("");
+                $("#txtBarcode").select();
+               // $("#lblTotalQty").text("");
+            }
+        }
+        )
+    }
+
+    function ValidateQty() {
+        if ($("#txtStore").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("请选择分播门店");
+            $("#Msg").css("visibility", "visible");
+            return;
+        }
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/CratesToStore/ValidateQty";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功!");
+                $("#Msg").css("visibility", "visible");
+                //$("#txtOldTrayNO").val("");
+                //$("#txtTrayNO").val("");
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#lblNeedSeedQty").html("");
+                $("#lblGoodsInfo").html("");
+                $("#lblTotalQty").html("");
+
+                $("#txtStockBatchNO").val("");
+                $("#txtTrayNO").val("");
+                $("#txtStore").val("");
+                $("#txtQty").val("");
+                $("#txtBarcode").focus();
+                $("#txtBarcode").select();
+
+         
+            }
+        }
+        )
+    }
+    $("#txtQty").keyup(function (e) {
+        if (e.keyCode == 13) {
+            return;
+        }
+        var str = $("#txtQty").val();
+        if (str != "") {
+            var n = parseFloat(str);
+            if (str.split(".").length >= 2 && str.split(".")[1].length > 3) {
+                $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 3)) / 1000.0);
+            } else
+                if (str.split(".").length >= 3) {
+                    $(this).val(n.toFixed(3));
+                }
+        }
+    }).focusout(function () {
+        $(this).keyup();
+    });
+    function SelectStockBatchNO(StockBatchNO, BatchQty) {
+        $("#txtStockBatchNO").val("");
+        $("#txtStockBatchNO").val(StockBatchNO);
+        $("#lblTotalQty").html("");
+        $("#lblTotalQty").html(BatchQty);
+        ValidateStockBatchNO();
+
+    }
+    function SelectStore(Store, NeedSeedQty) {
+        $("#txtStore").val("");
+        $("#txtStore").val(Store);
+        $("#lblNeedSeedQty").html("");
+        $("#lblNeedSeedQty").html(NeedSeedQty);
+
+        $("#txtTrayNO").focus();
+        $("#txtTrayNO").select();
+
+       
+        
+    }
+</script>

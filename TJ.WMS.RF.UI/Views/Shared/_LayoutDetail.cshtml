@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>@Session["CompanyTitle"]</title>
+    
+
+    <link href="@Url.Content("~/Content/Layout2.css")" rel="stylesheet" type="text/css" />
+
+    <!--[if lte IE 8]>
+       <link href="@Url.Content("~/Content/Layout1.css")" rel="stylesheet" type="text/css" />
+    <![endif]-->
+
+    <script src="@Url.Content("~/Scripts/jquery-1.4.4.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery.validate.min.js")" type="text/javascript"></script>
+</head>
+
+<body>
+<div id="header">
+@if (Session["User_ID"] == null  )
+{ 
+    <h3 class="title">@Session["CompanyTitle"]</h3>
+}
+else
+{ 
+    if(Session["User_Name"]!=null)
+    {
+        <table cellspacing="1" cellpadding="0" width="100%">
+        <tr>
+          <td align="left" width="30%" style="font-size: 12px">@Session["User_Name"]</td>
+          <td align="center"><b>@ViewBag.Title</b></td>
+          <td align="right" width="30%" style="font-size: 12px"><a id="backMenu" href="javascript:history.back();">返回</a></td>
+        </tr>
+        </table>
+       <!--<span id="loginUser"></span>@Session["User_Name"]<span>@ViewBag.Title</span><span><a id="backMenu" href="javascript:history.back();">返回</a></span>  <a href="javascript:if(confirm('您确定要退出系统操件吗？'))location.href='/Home'">退出</a>-->
+    }
+}
+ </div>
+ @RenderBody()
+ <div id="Msg" style="visibility: hidden;display:inline" class="errorMsg"></div><div id="Loading" style="visibility: hidden;display:inline"><img alt="" src="/Content/loading.gif" /></div>
+ <div id="footer"></div> 
+</body>
+</html>
+

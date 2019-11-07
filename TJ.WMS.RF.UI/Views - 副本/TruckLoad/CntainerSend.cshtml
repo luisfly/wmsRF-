@@ -1,0 +1,130 @@
+﻿@{
+    ViewBag.Title = "载具配送";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+<div  class="box">
+<input id="PaperNO" type="hidden" value="@ViewData["PaperNO"]" />
+   <table cellpadding="0" cellspacing="1">
+   <tr>
+      <td class="title">装车单号</td>
+      <td  class="content" id="lblPaperNO">@ViewData["PaperNO"]</td>
+    </tr>
+   <tr>
+      <td class="title">门店名称</td>
+      <td  class="content" id="lblStoreName">@ViewData["StoreNO"].@ViewData["StoreDesc"]</td>
+   </tr>
+  <tr>
+      <td class="title">载具编码</td>
+      <td  class="content">
+         <input type="text" name="txtCntainerNO" id="txtCntainerNO" class="tdInput" value=""/></td>
+   </tr>
+   <tr>
+    <td class="title">载具名称</td>
+    <td  class="content">
+    </td>
+   </tr>
+   <tr>
+      <td class="title">配送数量</td>
+      <td  class="content">
+             <input id="txtQty" name="txtQty" type="text" style = "ime-mode:disabled" 
+             onkeypress="if(（event.keyCode!=46）&&(event.keyCode<48 || event.keyCode>57)) event.returnValue=false" 
+             onafterpaste="this.value=this.value.replace(/\D/g,'')" class="tdInput"  />
+      </td>
+   </tr>
+ </table>  
+</div>
+<div class="btn">
+  <input  type="button" value="确认(F8)" id="btnOK" onclick="OK()";/>
+  <input  type="button" value="返回(F9)" id="btnBack"onclick="Back()"; />
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnOK").click();
+            }
+            if (e.which == 120)//F9
+            {
+                $("#btnBack").click();
+            }
+        });
+
+        $("#txtCntainerNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateCntainerNO();
+            }
+        }).blur();
+
+        $("#txtQty").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateCntainerQty();
+            }
+        }).blur();
+
+        $("#txtCntainerNO").focus();
+
+    });
+
+    function SetParmas() {
+        var params = {
+            "model.PaperNO": $("#lblPaperNO").text(),
+            "model.StoreNO": $("#lblStoreNO").text(),
+            "model.TruckNO": $("#txtTruckNO").val(),
+            "model.TrayNO": $("#txtTrayNO").val()
+        };
+        return params;
+    }
+
+    function ValidateCntainerNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/TruckLoad/ValidateCntainerNO";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtCntainerNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden")
+                $("#Msg").html("");
+                $("#txtQty").focus();
+            }
+        })
+    }
+
+    function ValidateCntainerQty() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/TruckLoad/ValidateCntainerQty";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtQty").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden")
+                $("#Msg").html("操作完成！");
+                $("#txtCntainerNO").val("");
+                $("#txtQty").val("");
+                $("#txtCntainerNO").focus();
+            }
+        })
+    }
+
+    function Back() {
+        window.location.href = "/TruckLoad/Detail?PaperNO=" + $("#PaperNO").val();
+    }
+</script>

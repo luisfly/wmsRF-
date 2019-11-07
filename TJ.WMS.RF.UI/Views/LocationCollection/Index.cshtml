@@ -1,0 +1,518 @@
+﻿@{
+    ViewBag.Title = "货架采集";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string ToDay = DateTime.Today.ToShortDateString();
+    //string Barcode = Request.QueryString["Barcode"];
+}
+<style>
+    .StdQuery table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .StdQuery table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+        }
+</style>
+<input id="hdStorageTypeID" name="hdStorageTypeID" type="hidden" class="tdInput" />
+<input id="hdGoodsID" name="hdGoodsID" type="hidden" class="tdInput" />
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">储位编码</td>
+            <td class="content">
+                <input id="txtLocationNO" name="txtLocationNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+        <tr>
+            <td class="title">托盘编码</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" disabled />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content"><input type="text" name="txtBarcode" id="txtBarcode" class="tdInput"disabled="disabled" /></td>
+        </tr>
+        <tr>
+            <td class="title">批号</td>
+            <td class="content">
+                @*<select class="tdInput" name="txtStockBatchNO" id="txtStockBatchNO" disabled="disabled"></select>*@
+                <input id="txtStockBatchNO" name="txtStockBatchNO" type="text" class="tdInput"disabled="disabled" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="title">实际数量</td>
+            <td class="content">
+                <input type="text" name="txtDealQty" id="txtDealQty" class="tdInput" disabled  
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" />
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="保存(F8)" id="btnSave" onclick="Save()" ; />
+    <input type="button" value="提交(F9)" id="btnPost" onclick="QryMissTray()" ; />
+</div>
+<div class="box">
+    <div style="height:2px">
+    </div>
+    <div class="StdQuery">
+        <table id="tbMainQuery">
+            <thead>
+                <tr>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnSave").click();
+            }
+            if (e.which == 120)//F9
+            {
+                $("#btnPost").click();
+            }
+//            if (e.which == 118)//F7
+//            {
+//                $("#btnCntainerSend").click();
+//            }
+        });
+
+        $("#txtLocationNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateLocationNO();
+            }
+        }).blur();
+
+        $("#txtDealQty").keypress(function (e) {
+            if (e.which == 13) {
+                Save();
+            }
+        }).blur();
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode()
+            }
+        }).blur();
+        $("#txtLocationNO").focus();
+
+    });
+
+    //=====================================================
+    function SetParmas() {
+        var params = {
+            "model.LocationNO": $("#txtLocationNO").val(),
+            "model.TrayNO": $("#txtTrayNO").val(),
+            "model.DealQty": $("#txtDealQty").val(),
+            "model.StorageTypeID": $("#hdStorageTypeID").val(),
+            "model.Barcode": $("#txtBarcode").val(),
+            "model.StockBatchNO": $("#txtStockBatchNO").val(),
+            "model.GoodsID": $("#hdGoodsID").val(),
+           
+            
+        };
+        return params;
+    }
+    //验证储位编码
+    function ValidateLocationNO() {
+
+        $("#txtTrayNO").val("")
+        $("#txtTrayNO").attr("disabled", true);
+        $("#txtDealQty").val("")
+        $("#txtDealQty").attr("disabled", true);
+        $("#txtBarcode").attr("disabled", true);
+        $("#txtBarcode").val(""),
+        $("#txtStockBatchNO").val(""),
+        $("#hdGoodsID").val(""),
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        
+        var url = "/LocationCollection/ValidateLocationNO";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj == undefined || dataObj.length <= 0) {
+                        //数据异常
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtLocationNO").focus();
+                        $("#txtLocationNO").select();
+                        return;
+                    }
+                    $("#hdStorageTypeID").val(dataObj[0]["StorageTypeID"])
+                    if ($("#hdStorageTypeID").val() == "C")//C为零拣区
+                    {
+                        ValidateTrayNO();
+                        $("#txtDealQty").focus();
+                        return;
+                    }
+                    if (dataObj[0]['TrayNO'] == '') {
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("该储物没有商品！");
+                        $("#txtLocationNO").focus();
+                        $("#txtLocationNO").select();
+                        return;
+                    }
+                    $("#txtTrayNO").attr("disabled", false);
+                    $("#txtTrayNO").focus();
+                    $("#Loading").css("visibility", "hidden");
+                }
+                catch (exception) {
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtLocationNO").focus();
+                    $("#txtLocationNO").select();
+                    obj.select();
+            }
+        })
+    }
+
+    //验证托盘
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+
+        var url = "/LocationCollection/ValidateTrayNO";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj == undefined || dataObj.length <= 0) {
+                        //数据异常
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtTrayNO").focus();
+                        $("#txtTrayNO").select();
+                        return;
+                    }
+                    if ($("#hdStorageTypeID").val() != "F" && $("#hdStorageTypeID").val() != "R") {
+                        //var Count = null;
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        trString = "<tr>"
+                        trString += "<td>序号</td>";
+                        trString += "<td>商品条码</td>";
+                        trString += "<td>外箱单位/<br/>单位</td>";
+                        trString += "<td>批次</td>";
+                      //  trString += "<td>库存数量</td>";
+                        trString += "<td>商品名称</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+
+                        var trString = "";
+                        for (var index in dataObj) {
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]["Item"] + "</td>";
+                            trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['Barcode'] + "</td>";
+                            trString += "<td>" + dataObj[index]["CaseUnits"] + "<br/>" + dataObj[index]["Unit"] + "</td>";
+                            trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]["StockBatchNO"] + "</td>";
+                          //  trString += "<td>" + dataObj[index]['Qty'] + "</td>";
+                            trString += "<td style='word-wrap: break-word; word-break: break-all;'>" + dataObj[index]['GoodsDesc'] + "</td>";
+                            trString += "</tr>";
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+                        }
+
+                        var color = "#ffeab3"
+                        $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                        /* 把背景色保存到属性中 */
+                        $("#tbMainQuery tr:odd").attr("bg", color);
+                        $("#tbMainQuery tr:even").attr("bg", "#fff");
+
+                        $("#txtDealQty").val("");
+                        $("#txtDealQty").attr("disabled", false);
+                        $("#txtDealQty").focus();
+                        $("#Loading").css("visibility", "hidden");
+                    }
+                    else {
+                        $("#txtBarcode").attr("disabled", false);
+                        $("#txtBarcode").focus();
+                        $("#txtBarcode").select();
+                        $("#Loading").css("visibility", "hidden");
+                    }
+                }
+                catch (exception) {
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtTrayNO").focus();
+                    $("#txtTrayNO").select();
+                }
+            
+        });
+
+    }
+    //------------验证条码
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LocationCollection/ValidateBarcode";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj == undefined || dataObj.length <= 0) {
+                    //数据异常
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtTrayNO").focus();
+                    $("#txtTrayNO").select();
+                    return;
+                }
+            
+                    //var Count = null;
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    trString = "<tr>"
+                    trString += "<td>序号</td>";
+                    trString += "<td>外箱单位/<br/>单位</td>";
+                    trString += "<td>批次</td>";
+                   // trString += "<td>库存数量</td>";
+                    trString += "<td>商品名称</td>";
+                    trString += "</tr>"
+                    $("#tbMainQuery thead").append(trString);
+                    var trString = "";
+                    for (var index in dataObj) {
+                        trString =  "<tr>"
+                        trString += "<td>" + dataObj[index]["Item"] + "</td>";
+                        trString += "<td>" + dataObj[index]["CaseUnits"] + "<br/>" + dataObj[index]["Unit"] + "</td>";
+                        trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'> <a  href='#' onclick=SelectStockBatchNO('" + dataObj[index]["StockBatchNO"] + "')>" + dataObj[index]['StockBatchNO'] + "</a></td>";
+                      //trString += "<td>" + dataObj[index]['Qty'] + "</td>";
+                        trString += "<td style='word-wrap: break-word; word-break: break-all;'>" + dataObj[index]['GoodsDesc'] + "</td>";
+                        trString += "</tr>";
+                        if (trString != "<tr></tr>")
+                            $("#tbMainQuery tbody").append(trString);
+                     }
+                   
+                    var color = "#ffeab3"
+                    $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                    /* 把背景色保存到属性中 */
+                    $("#tbMainQuery tr:odd").attr("bg", color);
+                    $("#tbMainQuery tr:even").attr("bg", "#fff");
+                    if (dataObj.length == 1) {
+                        $("#txtStockBatchNO").val(dataObj[0].StockBatchNO);
+                    }
+                    $("#hdGoodsID").val(dataObj[0].GoodsID)
+                    
+                    $("#txtDealQty").val("");
+                    $("#txtDealQty").attr("disabled", false);
+                    $("#txtDealQty").focus();
+                    $("#Loading").css("visibility", "hidden");
+
+            }
+            catch (exception) {
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#txtBarcode").focus();
+                $("#txtBarcode").select();
+            }
+
+        });
+
+    }
+    //选择批次
+    function SelectStockBatchNO(StockBatchNO) {
+        $("#txtStockBatchNO").val("");
+        $("#txtStockBatchNO").val(StockBatchNO);
+        Pause(this, 500); //调用暂停函数
+        this.NextStep = function () {
+            $("#txtDealQty").val("");
+            $("#txtDealQty").attr("disabled", false);
+            $("#txtDealQty").focus();
+        }
+
+        //$("#txtBarcode").val("");
+        //$("#txtBarcode").focus();
+    }
+    //保存按钮
+    function Save() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LocationCollection/Save";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data.substring(0, 5) != "error") {
+                if (data == "0") {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html("操作成功");
+                    Pause(this, 1000); //调用暂停函数
+                    this.NextStep = function () {
+                        document.location.href = "/LocationCollection";
+                    }
+                }
+                else {
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html("操作成功");
+                    $("#txtTrayNO").val("")
+                    $("#txtDealQty").val("")
+                    $("#txtDealQty").attr("disabled", true);
+                    $("#txtBarcode").attr("disabled", true);
+                    $("#txtBarcode").val(""),
+                    $("#txtStockBatchNO").val(""),
+                    $("#hdGoodsID").val(""),
+                    $("#txtTrayNO").focus()
+                    return;
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data.substring(5));
+                $("#txtDealQty").focus();
+                return;
+            }
+       });
+    }
+    //查询储位是否还有未采集的托盘
+    function QryMissTray() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LocationCollection/QryMissTray";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj == undefined || dataObj.length <= 0) {
+                    //数据异常
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    return;
+                }
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#Loading").css("visibility", "hidden");
+                if (confirm("还有" + dataObj[0]["ResultValue"] + "个托盘未采集，是否确认提交？") == true) {
+                    Post();
+                    $("#Msg").html("操作成功");
+                }
+                else {
+                    $("#Msg").html("操作成功");
+                    return;
+                }
+            }
+            catch (exception) {
+                //$("#tbMainQuery thead").html("");
+                //$("#tbMainQuery tbody").html("");
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+            }
+        });
+    }
+    //采集提交
+    function Post() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/LocationCollection/Post";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                return;
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/LocationCollection";
+                }
+            }
+        });
+    }
+ 
+        ///////////////////////////////////////////////////////////////////
+        function Pause(obj, iMinSecond) {
+            if (window.eventList == null) window.eventList = new Array();
+            var ind = -1;
+            for (var i = 0; i < window.eventList.length; i++) {
+                if (window.eventList[i] == null) {
+                    window.eventList[i] = obj;
+                    ind = i;
+                    break;
+                }
+            }
+            if (ind == -1) {
+                ind = window.eventList.length;
+                window.eventList[ind] = obj;
+            }
+            setTimeout("GoOn(" + ind + ")", iMinSecond);
+        }
+        function GoOn(ind) {
+            var obj = window.eventList[ind];
+            window.eventList[ind] = null;
+            if (obj.NextStep) obj.NextStep();
+            else obj();
+        }
+        function GetUrlPara(paraName) {
+            var sUrl = location.href;
+            var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+            var re = new RegExp(sReg, "gi");
+            re.exec(sUrl);
+            return RegExp.$1;
+        }
+        ///////////////////////////////////////////////////////////////////
+</script>

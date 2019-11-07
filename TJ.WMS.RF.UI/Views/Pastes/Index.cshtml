@@ -1,0 +1,100 @@
+﻿@{
+    ViewBag.Title = "集货拼板";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+       <tr>
+          <td class="title">原始出库箱</td>
+          <td class="content">
+             <input id="txtOldTrayNO" name="txtOldTrayNO" type="text" class="tdInput" />
+          </td>
+       </tr>
+       <tr>
+           <td class="title">目标出库箱</td>
+           <td class="content">
+              <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput"  />
+          </td>
+        </tr>
+   </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtOldTrayNO").attr("disabled", "");
+        $("#txtTrayNO").attr("disabled", "disabled");
+
+        $("#txtOldTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateOldTrayNO();
+            }
+        }).blur();
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+        //设置focus
+        $("#txtOldTrayNO").focus();
+    });
+
+
+    function SetParams() {
+      var params =
+      {
+          "model.OldTrayNO": $("#txtOldTrayNO").val(),
+          "model.TrayNO": $("#txtTrayNO").val()
+      };
+      return params;
+    }
+
+    function ValidateOldTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/Pastes/ValidateOldTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtOldTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtTrayNO").attr("disabled", "");
+                $("#txtTrayNO").focus();
+            }
+        }
+        )
+    }
+
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/Pastes/ValidateTrayNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功!");
+                $("#Msg").css("visibility", "visible");
+                $("#txtOldTrayNO").val("");
+                $("#txtTrayNO").val("");
+                $("#txtOldTrayNO").focus();
+                $("#txtTrayNO").attr("disabled", "disabled");
+            }
+        }
+        )
+    }
+</script>

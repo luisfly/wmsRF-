@@ -1,0 +1,193 @@
+﻿@{
+    ViewBag.Title = "集货";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+       <tr>
+          <td class="title">出库箱</td>
+          <td class="content">
+             <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+          </td>
+       </tr>
+       <tr>
+           <td class="title">订单</td>
+           <td class="content" id="lblOrderInfo"></td>
+       </tr>
+       <tr>
+          <td class="title">门店</td>
+          <td class="content" id="lblStoreInfo"></td>
+       </tr>
+       <tr>
+          <td class="title">集货位</td>
+          <td class="content" id="lblPostion"></td>
+       </tr>
+       <tr>
+           <td class="title">效验</td>
+           <td class="content">
+              <input id="txtPostion" name="txtPostion" type="text" class="tdInput"  />
+          </td>
+        </tr>
+   </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtTrayNO").attr("disabled", "");
+        $("#txtPostion").attr("disabled", "disabled");
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                CheckTrayNOSubmited();
+            }
+        }).blur();
+
+        $("#txtPostion").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePostion();
+            }
+        }).blur();
+        //设置focus
+        $("#txtTrayNO").focus();
+    });
+
+
+function SetParams()
+{
+    var params = 
+      { 
+        "model.TrayNO": $("#txtTrayNO").val(),
+        "model.Postion1": $("#txtPostion").val()
+      };
+   return params;
+}
+
+//检查出库箱是否未提交
+function CheckTrayNOSubmited() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").html("");
+    $("#Msg").css("visibility", "hidden");
+    $("#lblStoreInfo").text("");
+    $("#lblPostion").text("");
+    var url = "/Set/CheckTrayNOSubmited";
+    var params = SetParams();
+    $.post(url, params, function (data, txtStatus) {
+        if (data == "false" || data == "true") {
+            if (data == "false") { //未提交，调用提交过程
+                if (confirm("出库箱还没提交，是否提交出库箱？")) {
+                    SubmitTrayNO();
+                }
+                else {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html("");
+                    $("#Msg").css("visibility", "hidden");
+                    $("#txtTrayNO").select();
+                }
+            }
+            else {  //调用检查出库箱过程
+                ValidateTrayNO();
+            }
+        }
+        else {
+            //出错提示
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html(data);
+            $("#Msg").css("visibility", "visible");
+            $("#txtTrayNO").select();
+        }
+    }
+   )
+}
+
+//提交出库箱
+function SubmitTrayNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").html("");
+    $("#Msg").css("visibility", "hidden");
+    var url = "/Set/SubmitTrayNO";
+    var params = SetParams();
+    $.post(url, params, function (data, txtStatus) {
+        if (data != "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html(data);
+            $("#Msg").css("visibility", "visible");
+            $("#txtTrayNO").select();
+        }
+        else {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("");
+            $("#Msg").css("visibility", "hidden");
+            ValidateTrayNO();//提交成功，直接调用检查出库箱过程
+        }
+    }
+   )
+}
+
+function ValidateTrayNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").html("");
+    $("#Msg").css("visibility", "hidden");
+    var url = "/Set/ValidateTrayNO";
+    var params=SetParams();
+    $.post(url, params, function (data, txtStatus) {
+        if (data != "") {
+            var dataObj;
+            try {
+                dataObj = eval(data);
+                if (dataObj != undefined) {
+                    if (dataObj.length <= 0) { return false; }
+                    for (var index in dataObj) {
+                        $("#lblStoreInfo").text(dataObj[index].StoreNO);
+                        $("#lblPostion").text(dataObj[index].Postion1);
+                        $("#lblOrderInfo").text(dataObj[index].OrderInfo);
+                    }
+                    $("#Loading").css("visibility", "hidden");
+                    $("#txtPostion").attr("disabled", "");
+                    $("#txtPostion").select();
+                }
+            }
+            catch (exception) {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                $("#txtPostion").attr("disabled", "disabled");
+                $("#txtTrayNO").select();
+            }
+        }
+        else {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").html("");
+            $("#Msg").css("visibility", "hidden");
+            $("#txtPostion").attr("disabled", "");
+            $("#txtPostion").select();
+        }
+    }
+   )
+}
+function ValidatePostion() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").html("");
+    $("#Msg").css("visibility", "hidden");
+    var url="/Set/ValidatePostion";
+    var params=SetParams();
+    $.post(url,params,function(data,txtStatus){
+         if(data!="") {
+             $("#Loading").css("visibility", "hidden");
+             $("#Msg").html(data);
+             $("#Msg").css("visibility","visible");
+             $("#txtPostion").select();
+         }
+         else {
+             $("#Loading").css("visibility", "hidden");
+             $("#Msg").html("操作成功!");
+             $("#Msg").css("visibility", "visible");
+             $("#txtPostion").val("");
+             $("#txtTrayNO").val("");
+             $("#lblStoreInfo").text("");
+             $("#lblPostion").text("");
+             $("#txtPostion").attr("disabled", "disabled");
+             $("#txtTrayNO").select();
+         }
+      }
+   )
+}
+</script>

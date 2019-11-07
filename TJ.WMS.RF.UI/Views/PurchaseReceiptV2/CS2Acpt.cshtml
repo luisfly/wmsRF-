@@ -1,0 +1,679 @@
+﻿@{
+    ViewBag.Title = "二步越库收货";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    string ToDay = DateTime.Today.ToString("yyyy-MM-dd");
+}
+@using TJ.WMS.RF.UI.Models
+@model TJ.WMS.RF.UI.Models.PurchaseReceiptModels
+<script src="@Url.Content("~/My97DatePicker/WdatePicker.js")" type="text/javascript"></script>
+<div class="box">
+<input id="hdBillCode" type="hidden" value="@Html.Encode(ViewData["BillCode"])" />
+<input id="hdCaseUnit" type="hidden" value="" />
+<input id="hdShelfLife" type="hidden" value="" />
+<input id="hdToDay" type="hidden" value="@ToDay" />
+    <input id="hdBackCaseProductDate" type="hidden" value="1" />
+<table cellspacing="1" cellpadding="0">
+    <tr>
+    <td colspan="2" style="background-color:#c8e4fc; text-align:center;"> @Html.Encode(ViewData["BillCode"])</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="background-color:#c8e4fc; text-align:center;">
+      <span id="lblGoodsName"></span>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" id="DcacptQty" style="background-color:#c8e4fc; text-align:center;">
+    订货：<span id="lblOrderQty"></span> 已收：<span id="lblTraySumQty"></span></td>
+  </tr>
+    <tr>
+       <td class="title">商品条码</td>
+       <td class="content"><input type="text"  name="txtBarcode" id="txtBarcode" class="tdInput"  /></td>
+    </tr>
+    <tr>
+       <td class="title">托盘编码</td>
+       <td class="content"><input type="text"  name="txtTrayNO" id="txtTrayNO" class="tdInput"  /></td>
+    </tr>
+   <tr>
+       <td class="title" id="lblProductDate">生产日期</td>
+       <!--onclick="WdatePicker()" -->
+       <td class="content"><input type="text"  name="txtProductDate" id="txtProductDate" class="tdInput"  /></td>
+    </tr>
+    <tr>
+       <td class="title" id="lblEffectiveDate">到期日期</td>
+       <td class="content"><input type="text"  name="txtEffectiveDate" id="txtEffectiveDate" class="tdInput"  /></td>
+    </tr>
+    <tr>
+       <td class="title">收货数量</td>
+       <!--onkeypress="if(（event.keyCode!=46）&&(event.keyCode<48 || event.keyCode>57)) event.returnValue=false" onkeydown="if(event.keyCode==13)event.keyCode=9"-->
+       <td class="content">
+         <input type="text"  name="txtCaseQty" id="txtCaseQty" class="tdInput" style = "ime-mode:disabled;width: 40px" 
+             onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))" 
+             onafterpaste="this.value=this.value.replace(/\D/g,'')" />箱 +
+         <input type="text"  name="txtQty2" id="txtQty2" class="tdInput" style = "width: 40px"
+             onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))" 
+             onafterpaste="this.value=this.value.replace(/\D/g,'')" value="0"/>个
+       </td>
+    </tr>
+    <tr>
+       <td class="title">收货合计</td>
+       <td class="content">
+         <input type="text"  name="txtQty" id="txtQty" class="tdInput" style = "width: 50px"
+             onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))" 
+             onafterpaste="this.value=this.value.replace(/\D/g,'')" />个
+       </td>
+    </tr>
+</table>
+</div>
+ <div class="btn"><input  type="button" value="保存(F8)" id="btnSave" onclick="Save()" /> <input  type="button" id="btnOver" onclick="Over()"   value="收货完成(F9)"/></div> 
+<script type="text/javascript">
+    var isComplete = false;
+    $(document).ready(function () {
+
+        $("#txtTrayNO").attr("disabled", "disabled");
+        $("#txtProductDate").attr("disabled", "disabled");
+        $("#txtEffectiveDate").attr("disabled", "disabled");
+        $("#txtQty").attr("disabled", "disabled");
+        $("#txtCaseQty").attr("disabled", "disabled");
+        $("#txtQty2").attr("disabled", "disabled");
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                Save();
+            }
+            else if (e.which == 120)//F9
+            {
+                $("#btnOver").click();
+            }
+        });
+
+        //===================商品条码=================================
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                isComplete = false;
+                ValidateBarCode();
+            }
+        }).blur();
+
+        // ======================托盘编码=====================================
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+
+            }
+        }).blur();
+        //=======================生产日期==================
+        $("#txtProductDate").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateProductDate();
+            }
+        }).blur();
+        //==============================================
+        $("#txtProductDate").change(function () {
+            if ($("#txtProductDate").val() != "") {
+                var url = "/PurchaseReceipt/DateAdd";
+                var params = { "date": $("#txtProductDate").val(),
+                    "time": $("#hdShelfLife").val()
+                };
+                $.post(url, params, function (data, txtStatus) {
+                    if (data != "") {
+                        $("#txtEffectiveDate").val(data);
+                    }
+                }
+          )
+            }
+        })
+        //=============================================
+        $("#txtEffectiveDate").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateEffectiveDate();
+            }
+        }).blur();
+        //==============================================
+        $("#txtCaseQty").keypress(function (e) {
+            if (e.which == 13) {
+                //Save();
+                if ($("#txtCaseQty").val() == "") {
+                    $("#txtQty2").attr("disabled", "");
+                    $("#txtCaseQty").val("0");
+                    $("#txtQty2").focus();
+                    $("#txtQty2").select();
+                }
+                else {
+                    if (isNaN($("#txtCaseQty").val())) {
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html("请输入箱数！");
+                        $("#txtCaseQty").val("");
+                        $("#txtCaseQty").focus();
+                    }
+                    else {
+                        $("#txtQty2").attr("disabled", "");
+                        $("#txtQty2").focus();
+                        $("#txtQty2").select();
+                    }
+                }
+            }
+        }).blur();
+
+        $("#txtQty2").keypress(function (e) {
+            if (e.which == 13) {
+                Save();
+            }
+        }).blur();
+
+        $("#txtQty2").keyup(function (e) {
+            if (e.keyCode == 13)
+                return;
+            if ($("#txtQty2").val() != "") {
+                var n = parseFloat($("#txtQty2").val()); ;
+                $(this).val(n);
+                if (!isNaN(n)) {
+                    var CaseUnits = parseFloat($("#hdCaseUnit").val());
+                    var nv = (parseFloat($("#txtCaseQty").val()) * CaseUnits);
+                    nv = nv + n;
+                    $("#txtQty").val(nv);
+                }
+                else {
+                    $("#txtQty2").val("");
+                    $("#txtCaseQty").keyup();
+                }
+            }
+            else {
+                $("#txtCaseQty").keyup();
+            }
+        }).focusout(function () {
+            $(this).keyup();
+
+        });
+
+        $("#txtCaseQty").keyup(function (e) {
+            $("#Msg").css("visibility", "hidden");
+            $("#Msg").html("")
+            if (e.keyCode == 13) {
+                return;
+            }
+            if (isNaN($("#txtCaseQty").val())) {
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("请输入箱数！");
+                $("#txtCaseQty").val("");
+                $("#txtCaseQty").focus();
+                return;
+            }
+            $("#txtQty").val("");
+            if ($("#txtCaseQty").val() != "") {
+                var n = parseFloat($("#txtCaseQty").val()); ;
+                $(this).val(n);
+                if (!isNaN(n)) {
+                    var CaseUnits = parseFloat($("#hdCaseUnit").val());
+                    var nv = (n * CaseUnits);
+                    if ($("#txtQty2").val() != "")
+                        nv = nv + parseFloat($("#txtQty2").val());
+                    $("#txtQty").val(nv);
+                }
+                else {
+                    $("#txtQty").val("0");
+                    $("#txtQty2").val("0");
+                }
+            }
+        }).focusout(function () {
+            $(this).keyup();
+
+        });
+
+
+        $("#txtBarcode").focus();
+    });
+
+    function SetParams() {
+        var params = {
+            "model.OrderNO": $("#hdBillCode").val()
+        }
+        return params;
+    }
+
+    //================商品条码验证==================
+    function ValidateBarCode() {
+        $("#Loading").css("visibility", "visible");
+        $("#lblGoodsName").html("");
+        $("#lblOrderQty").text("");
+        $("#lblTraySumQty").text("");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var jqobj = $("#txtBarcode");
+        var url = "/PurchaseReceipt/ValidateCS2BarCode";
+        var params = { "Barcode": $("#txtBarcode").val(),
+            "OrderNO": $("#hdBillCode").val(),
+            "TrayNO": $("#txtTrayNO").val()
+        };
+        $.post(url, params, function (data, textStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length <= 0) { return false; }
+                        $("#lblOrderQty").text(dataObj[0].OrderQty);
+                        $("#lblTraySumQty").text(dataObj[0].TraySumQty);
+                        $("#hdCaseUnit").val(dataObj[0].CaseUnits);
+                        $("#hdShelfLife").val(dataObj[0].ShelfLife);
+                        $("#lblUnit").text(dataObj[0].Unit);
+                        $("#lblGoodsName").text(dataObj[0].GoodsName);
+                        $("#txtCaseQty").val(dataObj[0].AcptCaseQty);
+                        $("#txtQty").val(dataObj[0].AcptQty);
+                        $("#txtQty2").val(dataObj[0].Qty2);
+                        $("#txtProductDate").val(dataObj[0].ProductDate);
+                        $("#txtEffectiveDate").val(dataObj[0].EffectiveDate);
+                        $("#hdBackCaseProductDate").val(dataObj[0].BackCaseProductDate);//0.不反算；1.反算
+                        if (dataObj[0].ShelfLife == "0") {
+                            $("#lblProductDate").text("收货日期");
+                            //$("#txtProductDate").val(formatDate(new Date()));
+                            $("#txtProductDate").val($("#hdToDay").val());
+                            $("#txtEffectiveDate").val("");
+                            $("#txtProductDate").attr("disabled", "disabled");
+                            $("#txtEffectiveDate").attr("disabled", "disabled");
+                        }
+                        else {
+                            $("#lblProductDate").text("生产日期");
+                            //$("#txtProductDate").attr("disabled", "");
+                            //$("#txtEffectiveDate").attr("disabled", "");
+                            $("#txtProductDate").attr("disabled", "disabled");
+                            $("#txtEffectiveDate").attr("disabled", "disabled");
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        if (!isComplete) {
+                            $("#Msg").css("visibility", "hidden");
+                            $("#Msg").html("");
+                        }
+                        $("#txtTrayNO").attr("disabled", "");
+                        $("#txtTrayNO").focus()
+                    }
+                    else {
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtBarcode").focus();
+                        $("#txtBarcode").select();
+                        return false;
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    event.returnValue = false;
+                    $("#txtBarcode").focus();
+                    $("#txtBarcode").select();
+                    return false;
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtTrayNO").attr("disabled", "");
+                $("#txtTrayNO").focus();
+                return true;
+            }
+        }
+    );
+    }
+    //========================
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+
+        var jqobj = $("#txtTrayNO");
+        var url = "/PurchaseReceipt/ValidateCS2TrayNO"
+        var params = { "TrayNO": jqobj.val(),
+            "Barcode": $("#txtBarcode").val(),
+            "OrderNO": $("#hdBillCode").val(),
+            "model.StoreNO": $("#txtStoreNO").val()
+        };
+        $.post(url, params, function (data, textStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length <= 0) { return false; }
+                        $("#lblOrderQty").text(dataObj[0].OrderQty);
+                        $("#lblTraySumQty").text(dataObj[0].TraySumQty);
+                        $("#hdCaseUnit").val(dataObj[0].CaseUnits);
+                        $("#hdShelfLife").val(dataObj[0].ShelfLife);
+                        $("#lblUnit").text(dataObj[0].Unit);
+                        $("#lblGoodsName").text(dataObj[0].GoodsName);
+                        $("#txtCaseQty").val(dataObj[0].AcptCaseQty);
+                        $("#txtQty").val(dataObj[0].AcptQty);
+                        $("#txtQty2").val(dataObj[0].Qty2);
+                        $("#txtProductDate").val(dataObj[0].ProductDate);
+                        $("#txtEffectiveDate").val(dataObj[0].EffectiveDate);
+                        if (dataObj[0].ShelfLife == "0") {
+                            $("#lblProductDate").text("收货日期");
+                            //$("#txtProductDate").val(formatDate(new Date()));
+                            $("#txtProductDate").val($("#hdToDay").val());
+                            $("#txtEffectiveDate").val("");
+                            $("#txtProductDate").attr("disabled", "disabled");
+                            $("#txtEffectiveDate").attr("disabled", "disabled");
+                            $("#txtCaseQty").attr("disabled", "");
+                            $("#txtCaseQty").focus()
+                            $("#txtCaseQty").select()
+                        }
+                        else {
+                            $("#lblProductDate").text("生产日期");
+                            $("#txtProductDate").attr("disabled", "");
+                            //$("#txtEffectiveDate").attr("disabled", "");
+                            //$("#txtProductDate").attr("disabled", "disabled");
+                            $("#txtEffecteeiveDate").attr("disabled", "disabled");
+                            $("#txtProductDate").focus();
+                            $("#txtProductDate").select();
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").html("");
+
+                    }
+                    else {
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtTrayNO").focus();
+                        $("#txtTrayNO").select();
+                        return false;
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible")
+                    $("#Msg").html(data);
+                    event.returnValue = false;
+                    $("#txtTrayNO").focus();
+                    $("#txtTrayNO").select();
+                    return false;
+                }
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                $("#txtCaseQty").attr("disabled", "");
+                $("#txtCaseQty").focus();
+                return true;
+            }
+        }
+            );
+    }
+    //============================================
+    function ValidateProductDate() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var dt = $("#txtProductDate").val();
+        dt = MyFormatDate(dt);
+        $("#txtProductDate").val(dt);
+        if ($("#Msg").html() != "") {
+            $("#Loading").css("visibility", "hidden");
+            return;
+        }
+        var jqobj = $("#txtProductDate");
+        var url = "/PurchaseReceipt/ValidateCS2ProductDate";
+        var params = { "ProductDate": $("#txtProductDate").val(),
+            "time": $("#hdShelfLife").val()
+        }
+        $.post(url, params, function (data, textStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                return false;
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").html("");
+                var date = StrToDate($("#txtProductDate").val());
+                var day = parseInt($("#hdShelfLife").val());
+                $("#txtEffectiveDate").val(AddDays(date, day));
+                //如果不考虑保质期
+                if ($("#hdShelfLife").val() != "0") {
+                    $("#txtEffectiveDate").attr("disabled", "");
+                    $("#txtEffectiveDate").focus();
+                    $("#txtEffectiveDate").select();
+                } else {
+                    $("#txtEffectiveDate").attr("disabled", "disabled");
+                    $("#txtCaseQty").focus();
+                }
+                //alert(day);
+                return true;
+            }
+        }
+          );
+    }
+    //=======================================
+    function ValidateEffectiveDate() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var dt = $("#txtEffectiveDate").val();
+        dt = MyFormatDate(dt);
+        $("#txtEffectiveDate").val(dt);
+        if ($("#Msg").html() != "") {
+            $("#Loading").css("visibility", "hidden");
+            return;
+        }
+        ////////////////////////////////////////////
+        //$("#txtEffectiveDate").text(formatDate(StrToDate($("#txtEffectiveDate").val())));
+        var url = "/PurchaseReceipt/ValidateCS2EffectiveDate";
+        var params = { "EffectiveDate": $("#txtEffectiveDate").val(),
+            "shelfLife": $("#hdShelfLife").val()
+        };
+        $.post(url, params, function (data, textStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+                //$("#txtEffectiveDate").focus();
+                $("#txtEffectiveDate").select();
+                return false;
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                //SetInputDisabled(5);
+                if ($("#hdBackCaseProductDate").val() == "1") {
+                    var date = StrToDate($("#txtEffectiveDate").val());
+                    var day = -parseInt($("#hdShelfLife").val());
+                    $("#txtProductDate").val(AddDays(date, day));
+                }
+                $("#txtCaseQty").attr("disabled", "");
+                $("#txtCaseQty").focus();
+                $("#txtCaseQty").select();
+                //alert(day);
+                return true;
+            }
+        }
+           );
+    }
+    function Save() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        var url = "/PurchaseReceipt/CS2AcptConfirm";
+        var params = { "TrayNO": $("#txtTrayNO").val(),
+            "Barcode": $("#txtBarcode").val(),
+            "OrderNO": $("#hdBillCode").val(),
+            "StoreNO": $("#txtStoreNO").val(),
+            "EffectiveDate": $("#txtEffectiveDate").val(),
+            "ProductDate": $("#txtProductDate").val(),
+            "Qty": $("#txtQty").val(),
+            "shelfLife": $("#hdShelfLife").val()
+        };
+        $.post(url, params, function (data, textStatus) {
+            if (data != "") {
+                if (data == "0")//商品还没有收完
+                {
+                    var sum = 0;
+                    isComplete = true;
+                    ValidateBarCode(); //重新计算总收货量
+                    //sum = parseInt($("#txtQty").val()) + parseInt($("#lblTraySumQty").text());
+                    $("#txtTrayNO").val("");
+                    //$("#lblTraySumQty").text(sum);
+                    $("#txtCaseQty").val("");
+                    $("#txtQty").val("");
+
+                    //20140730
+                    $("#Loading").css("visibility", "hidden");
+                    $("#txtTrayNO").attr("disabled", "disabled");
+                    $("#txtProductDate").attr("disabled", "disabled");
+                    $("#txtEffectiveDate").attr("disabled", "disabled");
+                    $("#txtCaseQty").attr("disabled", "disabled");
+                    $("#txtQty2").attr("disabled", "disabled");
+                    $("#Msg").html("操作成功！");
+                    $("#Msg").css("visibility", "visible");
+                    //
+                }
+                else {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").html(data);
+                    $("#Msg").css("visibility", "visible");
+                    if ($("#txtCaseQty").val() == "") {
+                        $(document).focus();
+                    }
+                    else {
+                        $("#txtQty2").focus();
+                        $("#txtQty2").select();
+                    }
+                }
+            }
+            else {
+                //商品收货完成
+                isComplete = true;
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功！");
+                $("#Msg").css("visibility", "visible");
+
+                $("#lblOrderQty").text("");
+                $("#lblTraySumQty").text("");
+
+                //清空数据
+                $("#lblGoodsName").text("");
+                $("#txtBarcode").val("");
+                $("#txtTrayNO").val("")
+                $("#txtEffectiveDate").val("");
+                $("#txtProductDate").val("");
+                $("#hdShelfLife").val("");
+                $("#txtCaseQty").val("0");
+                $("#txtQty").val("0");
+                $("#txtQty2").val("0");
+                //20140726
+
+                $("#txtBarcode").focus();
+                $("#txtTrayNO").attr("disabled", "disabled");
+                $("#txtProductDate").attr("disabled", "disabled");
+                $("#txtEffectiveDate").attr("disabled", "disabled");
+                $("#txtCaseQty").attr("disabled", "disabled");
+                $("#txtQty2").attr("disabled", "disabled");
+            }
+        }
+       );
+    }
+    //============================
+    function Over() {
+        var url = "/PurchaseReceipt/Over";
+        var params = { "TrayNO": $("#txtTrayNO").val(),
+            "Barcode": $("#txtBarcode").val(),
+            "OrderNO": $("#hdBillCode").val(),
+            "EffectiveDate": $("#txtEffectiveDate").val(),
+            "ProductDate": $("#txtProductDate").val(),
+            "Qty": $("#txtQty").val(),
+            "shelfLife": $("#hdShelfLife").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                window.location.href = '/PurchaseReceipt';
+            }
+            else {
+                $("#Msg").html(data);
+                $("#Msg").css("visibility", "visible");
+            }
+        });
+    }
+    //======================================
+    function formatDate(d) {
+        var month = d.getMonth() + 1;
+        var day = d.getDate();
+        if (month < 10) {
+            month = "0" + month;
+        }
+        if (day < 10) {
+            day = "0" + day;
+        }
+        return d.getFullYear() + "-" + month + "-" + day;
+    }
+    //============字符串格式化成时间类型===========
+    function MyFormatDate(str) {
+        try {
+            $("#Msg").css("visibility", "hidden");
+            $("#Msg").html("");
+            var str1 = str
+            if (str == "") return;
+            if (str.length == 8) {
+                str = str.substr(0, 4) + "-" + str.substr(4, 2) + "-" + str.substr(6, 2);
+
+                if (!isDateString(str)) {
+                    $("#Msg").html("日期格式错误");
+                    $("#Msg").css("visibility", "visible");
+                    return str1;
+                } else
+                    return str;
+            }
+            else {
+                if (!isDateString(str)) {
+                    $("#Msg").html("日期格式错误");
+                    $("#Msg").css("visibility", "visible");
+                }
+                return str1;
+            }
+
+        }
+        catch (exception) {
+            $("#Msg").html("日期格式错误");
+            $("#Msg").css("visibility", "visible");
+            return str1;
+        }
+    }
+
+    function isDateString(sDate) {
+        var iaMonthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        var iaDate = new Array(3)
+        var year, month, day
+
+        if (arguments.length != 1) return false
+        iaDate = sDate.toString().split("-")
+        if (iaDate.length != 3) return false
+        if (iaDate[1].length > 2 || iaDate[2].length > 2) return false
+
+        year = parseFloat(iaDate[0])
+        month = parseFloat(iaDate[1])
+        day = parseFloat(iaDate[2])
+
+        if (year < 1900 || year > 2100) return false
+        if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) iaMonthDays[1] = 29;
+        if (month < 1 || month > 12) return false
+        if (day < 1 || day > iaMonthDays[month - 1]) return false
+        return true
+    }
+
+    function StrToDate(str) {
+
+        str = str.replace(/-/g, "/");
+        var date = new Date(str);
+        return date;
+    }
+    // 增加天  
+    function AddDays(date, value) {
+        date.setDate(date.getDate() + value);
+        return formatDate(date);
+    }          
+</script>

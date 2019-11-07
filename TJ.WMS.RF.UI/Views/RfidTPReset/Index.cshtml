@@ -1,0 +1,304 @@
+﻿@{
+    ViewBag.Title = "退标回收";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<input id="hdselRfidDrives" type="hidden" value="@ViewBag.selRfidDrives" />
+<div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">托盘编码</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">公司</td>
+            <td class="content"id="lblShipper"></td>
+        </tr>
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content" id="lblBarcode"></td>
+        </tr>
+        <tr>
+            <td class="title">商品名称</td>
+            <td class="content" id="lblGoodsName"></td>
+        </tr>
+        <tr>
+            <td class="title">生产日期</td>
+            <td class="content" id="lblProductDate"></td>
+        </tr>
+        <tr>
+            <td class="title">库存数量</td>
+            <td>
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="content" id="lblStockQty" style="width:50px"></td>
+                        <td style="width:55px;white-space:nowrap;word-break:nowrap">标签数量</td>
+                        <td class="content" id="lblRfidQty"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td class="title">选择设备</td>
+            <td class="content">
+                <select id="selRfidDrivers"></select>
+                <input type="button" value="连接" id="btnConnect" onclick="onRfidConnect()"  />
+                @*<button id="btnConnect" onclick="onRfidConnect()">连接</button>*@
+            </td>
+        </tr>
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="读取(F8)" id="btnRead" onclick="ReadRfid()" />
+    <input type="button" value="提交(F9)" id="btnOK" onclick="RfidTPResetApply()" />
+</div>
+@*<style>
+    .RFIDList table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+
+        .RFIDList table td {
+            font-size: 12px;
+            border: solid 1px #0094ff;
+            padding: 5px;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+</style>*@
+<div class="RFIDList">
+    <table id="tbMainQuery">
+        <thead>
+            <tr></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        });
+        $("#selRfidDrivers").keypress(function (e) {
+            if (e.which == 13) {
+                onRfidConnect();
+            }
+        });
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                ReadRfid();
+            }
+            else if (e.which == 120)//F9
+            {
+                RfidTPResetApply();
+            }
+        });
+        FillSelect();
+        $("#txtTrayNO").focus();
+
+    });
+    function FillSelect() {
+        list = $("#hdselRfidDrives").val();
+        $("#selRfidDrivers").html(list);
+    }
+    //连接或断开设备
+    function onRfidConnect() {
+        RfidData = null;
+        var bConnected = $("#btnConnect").val() != "连接" ? true : false;
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "visible");
+        if (!bConnected) {
+            $("#Msg").html("正在连接设备，请稍候...");
+        } else {
+            $("#Msg").html("正在断开设备，请稍候...");
+        }
+        $("#btnConnect").attr("disabled", true);
+        $("#selRfidDrivers").attr("disabled", true);
+        var url = "/RfidTPReset/ConnectDriver";
+        var params = {
+            "bConnected": bConnected,
+            "ipAddr": $("#selRfidDrivers").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                //失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                if (!bConnected) {
+                    $("#btnConnect").removeAttr("disabled");
+                    $("#selRfidDrivers").removeAttr("disabled");
+                }
+                $("#btnConnect").focus();
+            }
+            else {
+                //通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                if (!bConnected) {
+                    $("#Msg").html("设备连接成功！");
+                    $("#btnConnect").val("断开");
+                    $("#btnRead").focus();
+
+                } else {
+                    $("#Msg").html("设备已断开连接！");
+                    $("#btnConnect").text("连接");
+                    $("#selRfidDrivers").removeAttr("disabled");
+                    $("#btnConnect").focus();
+                }
+            }
+            $("#btnConnect").removeAttr("disabled");
+        })
+    }
+    
+    //读取RFID
+    function ReadRfid() {
+        if ($("#btnConnect").val() == "连接") {
+            alert("请先连接RFID设备！");
+            $("#btnConnect").focus();
+            return;
+        }
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+        $("#lblRfidQty").html("");//获取标签总数
+
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "visible");
+        $("#Msg").html("正在读取数据，请稍候...");
+        url = "/RfidTPReset/ReadRfid";
+        var params = { };
+        $.post(url, params, function (data, txtStatus) {
+            try {
+                var dataObj = eval(data);
+                //效验通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("读取标签成功，请确认提交！");
+
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                //var trString = "<tr>"
+                //trString += "<td><b>序号<b/></td>";
+                //trString += "<td><b>RFID<b/></td>";
+                //trString += "</tr>"
+                //$("#tbMainQuery thead").append(trString);
+                //trString = "";
+                //var i = 0;
+                //for (var index in dataObj) {
+                //    i++;
+                //    trString = "<tr>"
+                //    trString += "<td>" + i + "</td>";
+                //    trString += "<td>" + dataObj[index]['RFID'] + "</td>";
+                //    trString += "</tr>"
+                //    if (trString != "<tr></tr>")
+                //        $("#tbMainQuery tbody").append(trString);
+
+                //}
+                $("#lblRfidQty").html(dataObj.length);//获取标签总数
+                //trString = "<tr><td>合计：" + dataObj.length + "</td><td></tr>";
+                //$("#tbMainQuery tbody").append(trString);
+                //var color = "#ffeab3"
+                //$("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                ///* 把背景色保存到属性中 */
+                //$("#tbMainQuery tr:odd").attr("bg", color);
+                //$("#tbMainQuery tr:even").attr("bg", "#fff");
+                $("#Loading").css("visibility", "hidden");
+            } catch (exception) {
+                //效验失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#btnRead").focus();
+            }
+        })
+    }
+    //效验一下托盘号,
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        $("#tbMainQuery thead").html("");
+        $("#tbMainQuery tbody").html("");
+
+        $("#lblShipper").html("");
+        $("#lblBarcode").html("");
+        $("#lblGoodsName").html("");
+        $("#lblProductDate").html("");
+        $("#lblStockQty").html("");
+        $("#lblRfidQty").html("");
+        var url = "/RfidTPReset/ValidateTrayNO";
+        var params = {
+            "TrayNO": $("#txtTrayNO").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            try {
+                var dataObj = eval(data);
+                //效验通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#lblShipper").html(dataObj[0]['Shipper']);
+                $("#lblBarcode").html(dataObj[0]['Barcode']);
+                $("#lblGoodsName").html(dataObj[0]['GoodsName']);
+                $("#lblProductDate").html(dataObj[0]['ProductDate']);
+                $("#lblStockQty").html(dataObj[0]['StockQty']);
+                if ($("#btnConnect").val() == "连接") {
+                    $("#selRfidDrivers").focus();
+                } else {
+                    $("#btnRead").focus();
+                }
+            } catch (exception) {
+                //效验失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+        })
+    }
+
+    //提交数据
+    function RfidTPResetApply() {
+        
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        if (parseInt($("#lblStockQty").html()) != parseInt($("#lblRfidQty").html())) {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible")
+            $("#Msg").html("标签数量不一致，请重新读取标签！");
+            return;
+        }
+        var url = "/RfidTPReset/RfidTPResetApply";
+        var params = {
+            "TrayNO": $("#txtTrayNO").val()
+        };
+        $.post(url, params, function (data, txtStatus) {
+            if (data == "") {
+                //通过
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功！");
+                $("#tbMainQuery thead").html("");
+                $("#tbMainQuery tbody").html("");
+                $("#txtTrayNO").focus();
+                $("#txtTrayNO").select();
+            } else {
+                //失败
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html(data);
+            }
+        })
+    }
+    
+</script>
+

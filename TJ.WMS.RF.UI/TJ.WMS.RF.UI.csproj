@@ -1,0 +1,531 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9657EF56-94F0-4556-94BD-C51FFA0B21A2}</ProjectGuid>
+    <ProjectTypeGuids>{E53F8FEA-EAE0-44A6-8774-FFD645390401};{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TJ.WMS.RF.UI</RootNamespace>
+    <AssemblyName>TJ.WMS.RF.UI</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <MvcProjectUpgradeChecked>true</MvcProjectUpgradeChecked>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Mvc, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Web.WebPages" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="TJ.WMS.RF.Service, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\TJ.WMS.RF.Service\bin\Debug\TJ.WMS.RF.Service.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\CS2AcptCFMTrayQry.cs" />
+    <Compile Include="Controllers\LoadCheckController.cs" />
+    <Compile Include="Controllers\LoadPrint.cs" />
+    <Compile Include="Controllers\LoadQuery.cs" />
+    <Compile Include="Controllers\CratesRFIDController.cs" />
+    <Compile Include="Controllers\GoodsQueryController.cs" />
+    <Compile Include="Controllers\InvTaskController.cs" />
+    <Compile Include="Controllers\LocationQueryController.cs" />
+    <Compile Include="Controllers\MatchpLatePC.cs" />
+    <Compile Include="Controllers\CratesQuery.cs" />
+    <Compile Include="Controllers\OutBoxCheckController.cs" />
+    <Compile Include="Controllers\OutBoxQueryController.cs" />
+    <Compile Include="Controllers\LocationCollectionController.cs" />
+    <Compile Include="Controllers\PurchaseReceiptV2Controller.cs" />
+    <Compile Include="Controllers\PurchaseReceiptV3Controller.cs" />
+    <Compile Include="Controllers\RFAcptRfidsController.cs" />
+    <Compile Include="Controllers\RfidBatchQryController.cs" />
+    <Compile Include="Controllers\RfidTPResetController.cs" />
+    <Compile Include="Controllers\RfidModifyInStockController.cs" />
+    <Compile Include="Controllers\RfidInStockController.cs" />
+    <Compile Include="Controllers\RfidReplaceController.cs" />
+    <Compile Include="Controllers\CS2Move.cs" />
+    <Compile Include="Controllers\CS2AcptCFM.cs" />
+    <Compile Include="Controllers\StockBY.cs" />
+    <Compile Include="Controllers\StockMoveTaskController.cs" />
+    <Compile Include="Controllers\TPShelves.cs" />
+    <Compile Include="Controllers\TruckLoading.cs" />
+    <Compile Include="Controllers\内部销售拣货.cs" />
+    <Compile Include="Controllers\收货指示上架.cs" />
+    <Compile Include="Controllers\CratesToStore.cs" />
+    <Compile Include="Controllers\装载.cs" />
+    <Compile Include="Controllers\越库播种.cs" />
+    <Compile Include="Controllers\装笼.cs" />
+    <Compile Include="Controllers\补货.cs" />
+    <Compile Include="Controllers\退配收货.cs" />
+    <Compile Include="Controllers\MatchpLateV2.cs" />
+    <Compile Include="Controllers\零拣.cs" />
+    <Compile Include="Controllers\移仓.cs" />
+    <Compile Include="Controllers\集货拼板.cs" />
+    <Compile Include="Controllers\集货分板.cs" />
+    <Compile Include="Controllers\载具回收.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\装车.cs" />
+    <Compile Include="Controllers\集货.cs" />
+    <Compile Include="Controllers\出库装筐.cs" />
+    <Compile Include="Controllers\退配分板.cs" />
+    <Compile Include="Controllers\仓储拼板.cs" />
+    <Compile Include="Controllers\仓储分板.cs" />
+    <Compile Include="Controllers\MenuController.cs" />
+    <Compile Include="Controllers\PurchaseReceiptController.cs" />
+    <Compile Include="Controllers\上架.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Accept.cs" />
+    <Compile Include="Models\AcceptV2.cs" />
+    <Compile Include="Models\InvTaskModel.cs" />
+    <Compile Include="Models\MenuModel.cs" />
+    <Compile Include="Models\ProPick.cs" />
+    <Compile Include="Models\PurchaseReceiptModels.cs" />
+    <Compile Include="Models\PurchaseReceiptV2Models.cs" />
+    <Compile Include="Models\PurchaseReceiptV3Models.cs" />
+    <Compile Include="Models\Redist.cs" />
+    <Compile Include="Models\StockBYModels.cs" />
+    <Compile Include="Models\StockMove.cs" />
+    <Compile Include="Models\TPShelves.cs" />
+    <Compile Include="Models\TruckLoad.cs" />
+    <Compile Include="Models\UserMenuModel.cs" />
+    <Compile Include="Models\UserModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\JsonHelper.cs" />
+    <Compile Include="ViewModels\InternalPickModel.cs" />
+    <Compile Include="ViewModels\MatchplateCCH.cs" />
+    <Compile Include="ViewModels\CratesToStore.cs" />
+    <Compile Include="ViewModels\MatchpLateModel.cs" />
+    <Compile Include="ViewModels\MatchpLatePCModel.cs" />
+    <Compile Include="ViewModels\MatchpLateV2Model.cs" />
+    <Compile Include="ViewModels\PutCage.cs" />
+    <Compile Include="ViewModels\LocationCollectionModels.cs" />
+    <Compile Include="ViewModels\StockMoveTaskModel.cs" />
+    <Compile Include="ViewModels\ToStore.cs" />
+    <Compile Include="ViewModels\出库装筐.cs" />
+    <Compile Include="ViewModels\PastesCCH.cs" />
+    <Compile Include="ViewModels\PurchaseReceipt.cs" />
+    <Compile Include="ViewModels\拣货.cs" />
+    <Compile Include="ViewModels\SetViewModel.cs" />
+    <Compile Include="ViewModels\StockMoveViewModel.cs" />
+    <Compile Include="ViewModels\TransInStockViewModel.cs" />
+    <Compile Include="ViewModels\收货指示上架.cs" />
+    <Compile Include="ViewModels\补货.cs" />
+    <Compile Include="ViewModels\集货拼板.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\Drivers\rfidlib_drv_rpan.dll" />
+    <Content Include="Content\Layout.css" />
+    <Content Include="Content\Layout1.css" />
+    <Content Include="Content\Layout2.css" />
+    <Content Include="Content\loading.gif" />
+    <Content Include="Global.asax" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Content\themes\base\jquery-ui.css" />
+    <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
+    <Content Include="Content\themes\base\images\ui-bg_flat_75_ffffff_40x100.png" />
+    <Content Include="Content\themes\base\images\ui-bg_glass_55_fbf9ee_1x400.png" />
+    <Content Include="Content\themes\base\images\ui-bg_glass_65_ffffff_1x400.png" />
+    <Content Include="Content\themes\base\images\ui-bg_glass_75_dadada_1x400.png" />
+    <Content Include="Content\themes\base\images\ui-bg_glass_75_e6e6e6_1x400.png" />
+    <Content Include="Content\themes\base\images\ui-bg_glass_95_fef1ec_1x400.png" />
+    <Content Include="Content\themes\base\images\ui-bg_highlight-soft_75_cccccc_1x100.png" />
+    <Content Include="Content\themes\base\images\ui-icons_222222_256x240.png" />
+    <Content Include="Content\themes\base\images\ui-icons_2e83ff_256x240.png" />
+    <Content Include="Content\themes\base\images\ui-icons_454545_256x240.png" />
+    <Content Include="Content\themes\base\images\ui-icons_888888_256x240.png" />
+    <Content Include="Content\themes\base\images\ui-icons_cd0a0a_256x240.png" />
+    <Content Include="My97DatePicker\calendar.js" />
+    <Content Include="My97DatePicker\config.js" />
+    <Content Include="My97DatePicker\lang\en.js" />
+    <Content Include="My97DatePicker\lang\zh-cn.js" />
+    <Content Include="My97DatePicker\lang\zh-tw.js" />
+    <Content Include="My97DatePicker\My97DatePicker.htm" />
+    <Content Include="My97DatePicker\skin\datePicker.gif" />
+    <Content Include="My97DatePicker\skin\default\datepicker.css" />
+    <Content Include="My97DatePicker\skin\default\img.gif" />
+    <Content Include="My97DatePicker\skin\WdatePicker.css" />
+    <Content Include="My97DatePicker\skin\whyGreen\bg.jpg" />
+    <Content Include="My97DatePicker\skin\whyGreen\datepicker.css" />
+    <Content Include="My97DatePicker\skin\whyGreen\img.gif" />
+    <Content Include="My97DatePicker\WdatePicker.js" />
+    <Content Include="My97DatePicker\开发包\lang\en.js" />
+    <Content Include="My97DatePicker\开发包\lang\zh-cn.js" />
+    <Content Include="My97DatePicker\开发包\lang\zh-tw.js" />
+    <Content Include="My97DatePicker\开发包\readme.txt" />
+    <Content Include="My97DatePicker\开发包\skin\datePicker.gif" />
+    <Content Include="My97DatePicker\开发包\skin\default\datepicker.css" />
+    <Content Include="My97DatePicker\开发包\skin\default\img.gif" />
+    <Content Include="My97DatePicker\开发包\skin\WdatePicker.css" />
+    <Content Include="My97DatePicker\开发包\skin\whyGreen\bg.jpg" />
+    <Content Include="My97DatePicker\开发包\skin\whyGreen\datepicker.css" />
+    <Content Include="My97DatePicker\开发包\skin\whyGreen\img.gif" />
+    <Content Include="Scripts\font-awesome-4.7.0\css\font-awesome.css" />
+    <Content Include="Scripts\font-awesome-4.7.0\css\font-awesome.min.css" />
+    <Content Include="Scripts\font-awesome-4.7.0\css\site.css" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\fontawesome-webfont.svg" />
+    <Content Include="Scripts\font-awesome-4.7.0\HELP-US-OUT.txt" />
+    <Content Include="Scripts\InputValidate.js" />
+    <Content Include="Views\PurchaseReceiptV2\loading.gif" />
+    <Content Include="Views\PurchaseReceiptV3\loading.gif" />
+    <Content Include="Views\CS2Move\loading.gif" />
+    <Content Include="Views\StockBY\loading.gif" />
+    <Content Include="Views\ToStore\Detail2.cshtml" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Scripts\jquery-1.4.4.js" />
+    <Content Include="Scripts\jquery-1.4.4.min.js" />
+    <Content Include="Scripts\jquery-1.4.4-vsdoc.js" />
+    <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
+    <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
+    <Content Include="Scripts\jquery.validate.js" />
+    <Content Include="Scripts\jquery.validate.min.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
+    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
+    <Content Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery-ui.js" />
+    <Content Include="Scripts\jquery-ui.min.js" />
+    <Content Include="Scripts\MicrosoftAjax.js" />
+    <Content Include="Scripts\MicrosoftAjax.debug.js" />
+    <Content Include="Scripts\MicrosoftMvcAjax.js" />
+    <Content Include="Scripts\MicrosoftMvcAjax.debug.js" />
+    <Content Include="Scripts\MicrosoftMvcValidation.js" />
+    <Content Include="Scripts\MicrosoftMvcValidation.debug.js" />
+    <Content Include="Views\Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PurchaseReceipt\Detail.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PurchaseReceipt\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shelves\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\MatchplateCCH\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PastesCCH\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\MatchplateTP\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\ContainerAcpt\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\TruckLoad\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\OutBoxIn\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Set\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\LoginInfo.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\MenuInfo.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Redist\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Redist\Detail.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\StockMove\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Pastes\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\MatchpLate\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\_LayoutLogin.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Home\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Menu\index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Shared\_LayoutDetail.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PICK\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PICK\NoPick.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PICK\SubmitOverDialog.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Replenish\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Replenish\NoReplenish.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Replenish\BoxRep.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Replenish\RepInputTray.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\Replenish\RepShelves.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\TruckLoad\Detail.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\TruckLoad\UnLoad.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PutCage\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PurchaseReceipt\CS1Acpt.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\PurchaseReceipt\CS2Acpt.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\TruckLoad\CntainerSend.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\InvTask\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\ToStore\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\ToStore\Detail.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\AutoShelves\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\WMS_RF.pubxml" />
+    <Content Include="Views\OutBoxQuery\Index.cshtml" />
+    <Content Include="Views\InternalPick\Index.cshtml" />
+    <Content Include="Views\InternalPick\Detail.cshtml" />
+    <Content Include="Views\Load\Index.cshtml" />
+    <Content Include="Views\Load\Detail.cshtml" />
+    <Content Include="Views\Load\UnLoad.cshtml" />
+    <Content Include="Views\TruckLoading\Index.cshtml" />
+    <Content Include="Views\TruckLoading\Detail.cshtml" />
+    <Content Include="Views\TruckLoading\UnLoad.cshtml" />
+    <Content Include="Views\StockMoveTask\Index.cshtml" />
+    <Content Include="Views\StockMoveTask\Detail.cshtml" />
+    <Content Include="Views\StockMoveTask\Detail2.cshtml" />
+    <Content Include="Views\LocationCollection\Index.cshtml" />
+    <Content Include="Views\PurchaseReceiptV2\CS1Acpt.cshtml" />
+    <Content Include="Views\PurchaseReceiptV2\CS2Acpt.cshtml" />
+    <Content Include="Views\PurchaseReceiptV2\Detail.cshtml" />
+    <Content Include="Views\PurchaseReceiptV2\Index.cshtml" />
+    <Content Include="Views\PurchaseReceiptV2\复件 Detail.cshtml" />
+    <Content Include="Views\MatchpLateV2\Index.cshtml" />
+    <Content Include="Views\PurchaseReceiptV3\CS1Acpt.cshtml" />
+    <Content Include="Views\PurchaseReceiptV3\CS2Acpt.cshtml" />
+    <Content Include="Views\PurchaseReceiptV3\Detail.cshtml" />
+    <Content Include="Views\PurchaseReceiptV3\Index.cshtml" />
+    <Content Include="Views\PurchaseReceiptV3\复件 Detail.cshtml" />
+    <Content Include="Views\StockBY\Detail.cshtml" />
+    <Content Include="Views\StockBY\Index.cshtml" />
+    <Content Include="Views\TPShelves\Detail.cshtml" />
+    <Content Include="Views\TPShelves\Index.cshtml" />
+    <Content Include="Views\MatchpLatePC\Index.cshtml" />
+    <Content Include="Views\CratesRFID\Index.cshtml" />
+    <Content Include="Views\RfidReplace\Index.cshtml" />
+    <Content Include="Views\RfidInStock\Index.cshtml" />
+    <Content Include="Views\OutBoxCheck\Index.cshtml" />
+    <Content Include="Views\LocationQuery\Index.cshtml" />
+    <Content Include="Views\CS2AcptCFMTrayQry\Index.cshtml" />
+    <Content Include="Views\LoadQuery\Index.cshtml" />
+    <Content Include="Views\CratesToStore\Index.cshtml" />
+    <Content Include="Views\ToStore\Detail5.cshtml" />
+    <Content Include="Views\PurchaseReceipt\CS2AcptToStore.cshtml" />
+    <Content Include="Views\RfidModifyInStock\Index.cshtml" />
+    <Content Include="Views\RfidBatchQry\Index.cshtml" />
+    <Content Include="Views\CS2Move\Detail.cshtml" />
+    <Content Include="Views\CS2Move\Index.cshtml" />
+    <Content Include="Views\RFAcptRfids\Index.cshtml" />
+    <Content Include="Views\RfidTPReset\Index.cshtml" />
+    <Content Include="Views\CS2AcptCFM\Detele.cshtml" />
+    <Content Include="Views\CS2AcptCFM\Index.cshtml" />
+    <Content Include="Views\LoadPrint\Index.cshtml" />
+    <Content Include="Views\CratesQuery - 复制\Index.cshtml" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\fontawesome-webfont.eot" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\fontawesome-webfont.ttf" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\fontawesome-webfont.woff" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\fontawesome-webfont.woff2" />
+    <Content Include="Scripts\font-awesome-4.7.0\fonts\FontAwesome.otf" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\animated.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\bordered-pulled.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\core.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\fixed-width.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\font-awesome.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\icons.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\larger.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\list.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\mixins.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\path.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\rotated-flipped.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\screen-reader.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\stacked.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\less\variables.less" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\font-awesome.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_animated.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_bordered-pulled.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_core.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_fixed-width.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_icons.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_larger.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_list.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_mixins.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_path.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_rotated-flipped.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_screen-reader.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_stacked.scss" />
+    <Content Include="Scripts\font-awesome-4.7.0\scss\_variables.scss" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\GoodsQuery\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Views\LoadCheck\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>10590</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:10690/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

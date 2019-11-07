@@ -1,0 +1,107 @@
+﻿@{
+    ViewBag.Title = "采购收货";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<form id="billForm" action="/PurchaseReceipt/Detail" method="POST" >
+         <input type="hidden" id="hdBillCode" name="hdBillCode"/>
+</form>
+<form id="CS1Order" action="/PurchaseReceipt/CS1Acpt" method="POST" >
+<input type="hidden" id="hdCS1OrderNO" name="hdCS1OrderNO"/>
+</form>
+<form id="CS2Order" action="/PurchaseReceipt/CS2Acpt" method="POST" >
+<input type="hidden" id="hdCS2OrderNO" name="hdCS2OrderNO"/>
+</form>
+<div class="box">
+    <table cellspacing="1" cellpadding="0">
+       <tr>
+          <td class="title">订单号</td>
+          <td class="content"><input type="text"  name="txtBillCode" id="txtBillCode" class="tdInput"  /></td>
+       </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtBillCode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePaperNO();
+            }
+        }).blur();
+        $("#txtBillCode").focus();
+        $("#txtBillCode").select();
+    })
+    
+    function ValidatePaperNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").html("");
+        $("#Msg").css("visibility", "hidden");
+        $.post("/PurchaseReceipt/ValidateOrderCode",
+      { "OrderNO": $("#txtBillCode").val() },
+      function (data, txtStatus) {
+          if ((data == "DC") || (data == "CS1") || (data == "CS2")) {
+              $("#hdBillCode").val($("#txtBillCode").val());
+
+              $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility", "visible");
+              $("#Msg").html("操作成功，正在跳转...");
+              Pause(this, 500); //调用暂停函数
+              this.NextStep = function () {
+                  if (data == "DC") {
+                      $("#billForm").submit();
+                  }
+                  else
+                      if (data == "CS1") {
+                          $("#hdCS1OrderNO").val($("#txtBillCode").val());
+                          $("#CS1Order").submit();
+                      }
+                      else
+                          if (data == "CS2") {
+                              $("#hdCS2OrderNO").val($("#txtBillCode").val());
+                              $("#CS2Order").submit();
+                          }
+              } 
+          }
+          else {
+              $("#Loading").css("visibility", "hidden");
+              $("#txtBillCode").select();
+              $("#Msg").html(data);
+              $("#Msg").css("visibility", "visible")
+          }
+      }
+   );
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  function Pause(obj, iMinSecond) {
+      if (window.eventList == null) window.eventList = new Array();
+      var ind = -1;
+      for (var i = 0; i < window.eventList.length; i++) {
+          if (window.eventList[i] == null) {
+              window.eventList[i] = obj;
+              ind = i;
+              break;
+          }
+      }
+      if (ind == -1) {
+          ind = window.eventList.length;
+          window.eventList[ind] = obj;
+      }
+      setTimeout("GoOn(" + ind + ")", iMinSecond);
+  }
+  function GoOn(ind) {
+      var obj = window.eventList[ind];
+      window.eventList[ind] = null;
+      if (obj.NextStep) obj.NextStep();
+      else obj();
+  }
+  function GetUrlPara(paraName) {
+      var sUrl = location.href;
+      var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+      var re = new RegExp(sReg, "gi");
+      re.exec(sUrl);
+      return RegExp.$1;
+  }
+  ///////////////////////////////////////////////////////////////////
+</script> 
+
+
+

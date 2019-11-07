@@ -1,0 +1,278 @@
+﻿@media screen and (max-width: 260px)
+ {body,html,table,td,th,tr,h3{margin:0px;padding:0px}
+
+table{border-spacing:1;border-collapse:separate;border:0}
+body{font: normal 100% Helvetica, Arial, sans-serif; font-size:1em;width:100%}
+ a,a:hover{ text-decoration:none; color:#0373bf; }
+ h3{ font-size:1.2em;}
+#header{ 
+  line-height:30px;
+  height:30px; width:100%; 
+  background-color:#0074bd; 
+  color:#FFF;}
+#header{zoom:1;}
+#header h3{ float:left; display:block; background-color:#0074bd;color:#fff;}
+#header #loginUser{float:right; padding-left:3px;}
+#header  a{  float:right;color:yellow; margin:0 5px;}
+#Menu{  border :0px red solid;}
+ *
+#Menu a{ 
+    width:80%;
+    font-size:12px;
+    border :1px #99dcf9 solid;
+    background :#D0F0FF;
+    line-height:20px;display:block;
+    margin:5px 0;
+    }
+         *
+        .menu_btn
+        {
+            width:100px;
+            font-size:12px;
+            border :1px #99dcf9 solid;
+            background :#D0F0FF;
+            line-height:25px;
+            margin:2px 2px;
+            font-weight:700;
+        }
+        
+.goodsquery table { background-color:#bbd9f5; width:100%;border-collapse:collapse;font-size:80%;}
+.goodsquery table td{ border:solid 1px #0094ff;padding:5px}
+
+.box{font-size:80%;}
+.box table{background-color:#bbd9f5; width:100%;}
+.box .title{width:30%; background-color:#b9daf7; padding:0 5px; text-align:right; padding:0px}
+.box .content{background-color:#fff; padding-left:5px;}
+.box .tdInput,
+.box .txt2{border:1px solid #333; font-size:12px;}
+.box .tdInput{width:80%; margin:0px;}
+.box .txt2{width:35%;}
+.box .btn{background-color:#0373bf; color:#fff; border:1px solid #99dcf9; font-size:100%;}
+.btn{ margin:5px 0px;}
+.btn input{ 
+   background-color:#0074bd; 
+   border-color:transparent;
+   color:#FFF;
+   }
+.content #btnConnect { 
+   background-color:#0074bd; 
+   border-color:transparent;
+   color:#FFF;
+   }
+.detail{font-size:0.8em;}
+.detail table{background-color:#bbd9f5; width:90%}
+.detail table tr.title th{background-color:#0373bf;color:#FFF}
+.detail table td{background-color:#fff; padding:5px;}
+.errorMsg {color:Red;
+}
+  .RFIDList table { background-color: #bbd9f5;width: 100%;border-collapse: collapse;font-size: 80%;}
+
+.RFIDList table td {font-size: 12px; border: solid 1px #0094ff;padding: 5px; /*word-break: keep-all;*/ /*white-space: nowrap*/ }
+}
+
+
+@media screen and (min-width: 260px) {
+    body, html, table, td, th, tr, h3 {
+        margin: 0px;
+        padding: 0px;
+    }
+
+    table {
+        border-spacing: 1;
+        border-collapse: separate;
+        border: 0;
+    }
+
+    body {
+        font: normal 100% Helvetica, Arial, sans-serif;
+        font-size: 1em;
+        width: 100%;
+
+    }
+
+    a, a:hover {
+        text-decoration: none;
+        color: #0373bf;
+    }
+
+    h3 {
+        font-size: 1.2em;
+    }
+
+    #header {
+        line-height: 30px;
+        height: 30px;
+        width: 100%;
+        background-color: #0074bd;
+        color: #FFF;
+    }
+
+    #header {
+        zoom: 1;
+    }
+
+        #header h3 {
+            float: left;
+            display: block;
+            background-color: #0074bd;
+            color: #fff;
+        }
+
+        #header #loginUser {
+            float: right;
+            padding-left: 3px;
+        }
+
+        #header a {
+            float: right;
+            color: yellow;
+            margin: 0 5px;
+        }
+
+    #Menu {
+        border: 0px red solid;
+    }
+
+        #Menu a {
+            width: 80%;
+            font-size: 16px;
+            border: 1px #99dcf9 solid;
+            background: #D0F0FF;
+            line-height: 20px;
+            display: block;
+            margin: 5px 0;
+        }
+
+    * .menu_btn {
+        width: 100px;
+        font-size: 18px;
+        border: 1px #99dcf9 solid;
+        background: #D0F0FF;
+        line-height: 25px;
+        margin: 2px 0;
+        font-weight: 700;
+    }
+
+    .goodsquery table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 100%;
+        /*table-layout: fixed;*/
+    }
+
+        .goodsquery table td {
+            border: solid 1px #0094ff;
+            padding: 5px;
+            /*overflow:hidden;
+            text-overflow:ellipsis;*/
+        }
+
+    .box {
+        font-size: 18px;
+    }
+
+        .box table {
+            background-color: #bbd9f5;
+            width: 100%;
+        }
+
+        .box .title {
+            width: 30%;
+            background-color: #b9daf7;
+            padding: 0 5px;
+            text-align: right;
+            padding: 0px;
+        }
+
+        .box .content {
+            background-color: #fff;
+            padding-left: 5px;
+        }
+
+        .box .tdInput,
+        .box .txt2 {
+            border: 1px solid #333;
+            font-size: 18px;
+        }
+
+        .box .tdInput {
+            width: 80%;
+            margin: 0px;
+        }
+
+        .box .txt2 {
+            width: 35%;
+        }
+
+        .box .btn {
+            background-color: #0373bf;
+            color: #fff;
+            border: 1px solid #99dcf9;
+            font-size: 100%;
+        }
+
+    .btn {
+        margin: 5px 0px;
+    }
+
+        .btn input {
+            background-color: #0074bd;
+            border-color: transparent;
+            color: #FFF;
+        }
+
+    .detail {
+        font-size: 0.8em;
+    }
+
+        .detail table {
+            background-color: #bbd9f5;
+            width: 90%;
+        }
+
+            .detail table tr.title th {
+                background-color: #0373bf;
+                color: #FFF;
+            }
+
+            .detail table td {
+                background-color: #fff;
+                padding: 5px;
+            }
+
+    .errorMsg {
+        color: Red;
+    }
+        .RFIDList table {
+        background-color: #bbd9f5;
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 80%;
+    }
+        .content #btnConnect {
+    background-color: #0074bd;
+    border-color: transparent;
+    color: #FFF;
+}
+    .RFIDList table td {font-size: 12px; border: solid 1px #0094ff;padding: 5px; /*word-break: keep-all;*/ /*white-space: nowrap;*/ }
+.box-wrap {
+    text-align: center;
+    background-color: #FFFFFF;
+    overflow: hidden; 
+}
+
+.box-wrap>a {
+    width: 47%;
+   
+    margin: 1%;
+    border-radius: 10%;
+    float: left;
+    background-color: #FFFFFF;
+}
+}
+
+
+.orange {
+    color:#ff6a00
+}

@@ -1,0 +1,276 @@
+﻿@{
+    ViewBag.Title = "越库播种";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+
+<div class="box">
+    <input id="Item" type="hidden" value="@ViewData["Item"]" />
+    <input id="hdOldStoreNO" type="hidden" value="@ViewData["OldStoreNO"]" />
+
+    <input id="hdOldBarcode" type="hidden" value="@ViewData["OldBarcode"]" />
+
+    <input id="hdStoreNO" type="hidden" value="@ViewData["StoreNO"]" />
+
+    <input id="hdBarcode" type="hidden" value="@ViewData["Barcode"]" />
+    <input id="hdTrayNO" type="hidden" value="@ViewData["OldTrayNO"]" />
+    <input id="hdNeedSeedQty" type="hidden" value="@ViewData["NeedSeedQty"]" />
+    <input id="PaperNO" type="hidden" value="@ViewData["PaperNO"]" />
+    <input id="isCheckToStoreBarcode" type="hidden" value="@ViewData["isCheckToStoreBarcode"]" />
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">门店</td>
+            <td class="content" id="lblStoreDesc">@ViewData["StoreNO"].@ViewData["StoreDesc"]</td>
+        </tr>
+        <tr>
+            <td class="title">越库托盘</td>
+            <td class="content" id="lblOldTrayNO">@ViewData["OldTrayNO"]</td>
+        </tr>
+        <tr>
+            <th colspan="4">
+                <div class="" style="font-family: 宋体, Arial, Helvetica, sans-serif; font-size: 14px;">
+                    条码:<u id="Barcode">@ViewData["Barcode"]</u><br />
+                    <a id="GoodsDesc" style="color: #000000">@ViewData["GoodsDesc"]</a><br />
+                    (包装单位:<a id="CaseUnits" style="color: #000000">@ViewData["CaseUnits"]</a>)
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <td class="title">总数量</td>
+            <td class="content" id="lalSrcQty">@ViewData["SrcQty"] </td>
+        </tr>
+        <tr>
+            <td class="title">越库位</td>
+            <td class="content" id="lblPostion2">@ViewData["Postion2"]</td>
+        </tr>
+        <tr>
+            <td class="title">效验越库位</td>
+            <td class="content">
+                <input type="text" name="txtPostion2" id="txtPostion2" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">效验条码</td>
+            <td class="content">
+                <input type="text" name="txtBarcode" id="txtBarcode" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">出库箱</td>
+            <td class="content">
+                <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">数量</td>
+            <td class="content" id="lblQty">@ViewData["CaseQty"]箱 + @ViewData["MoreQty"]个</td>
+        </tr>
+
+    </table>
+</div>
+<div class="btn">
+    <input type="button" value="确认(F8)" id="btnOK" onclick="PickGoods()" />
+    <input type="button" value="提交出库箱(F9)" id="btnSubmitTrayNO" onclick="window.location.href = '/Set';" />
+    <input type="button" value="返回" id="return" onclick="window.location.href = '/ToStore';" />
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                ValidateTrayNO();
+            }
+            if (e.which == 120)//F9
+            {
+                window.location.href = "/Set";
+            }
+
+        });
+
+
+        $("#txtPostion2").keypress(function (e) {
+            if (e.which == 13) {
+
+                ValidatePostion2();
+            }
+        }).blur();
+        $("#txtBarcode").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateBarcode();
+            }
+        }).blur();
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        if ($("#isCheckToStoreBarcode").val() == "0") {
+
+            $("#txtBarcode").val($("#hdBarcode").val())
+            $("#txtBarcode").attr("disabled", "disabled")
+            if ($("#hdOldStoreNO").val() == $("#hdStoreNO").val()) {
+                $("#txtPostion2").val($("#lblPostion2").text());
+                $("#txtTrayNO").select();
+
+            }
+            else {
+                $("#txtPostion2").focus();
+                $("#txtPostion2").select();
+            }
+        }
+        else {
+
+            if ($("#hdOldStoreNO").val() == $("#hdStoreNO").val()) {
+                $("#txtPostion2").val($("#lblPostion2").text())
+                if ($("#hdOldBarcode").val() == $("#hdBarcode").val()) {
+                    $("#txtBarcode").val($("#hdBarcode").val())
+                    $("#txtTrayNO").select();
+                }
+                else {
+                    $("#txtBarcode").select();
+                }
+            }
+            else {
+                $("#txtPostion2").focus();
+                $("#txtPostion2").select();
+            }
+        }
+
+        //if ($("#hdOldStoreNO").val() == $("#hdStoreNO").val() && $("#hdOldBarcode").val() == $("#hdBarcode").val()) {
+        //    $("#txtBarcode").val($("#hdBarcode").val())
+        //}
+        //$("#txtPostion2").focus();
+    });
+
+    function SetParams() {
+        var params = {
+            "model.PaperNO": $("#PaperNO").val(),
+            "model.Item": $("#Item").val(),
+            "model.OldTrayNO": $("#lblOldTrayNO").text(),
+            "model.Postion2": $("#txtPostion2").val(),
+            "model.TrayNO": $("#txtTrayNO").val(),
+            "model.SeedQty": $("#hdNeedSeedQty").val(),
+            "model.Barcode":$("#txtBarcode").val()
+
+        }
+        return params;
+    }
+
+    function ValidatePostion2() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidatePostion22";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtPostion2").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //$("#txtTrayNO").attr("disabled", "");
+                if ($("#isCheckToStoreBarcode").val() == "0") {
+                    $("#txtTrayNO").focus();
+                }
+                else {
+                    if ($("#hdOldStoreNO").val() == $("#hdStoreNO").val() && $("#hdOldBarcode").val() == $("#txtBarcode").val()) {
+
+                        $("#txtTrayNO").focus();
+                    }
+                    else {
+                        $("#txtBarcode").select();
+                    }
+                }
+
+            }
+        })
+    }
+
+    function ValidateBarcode() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidateBarcode";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtBarcode").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden");
+                //$("#txtTrayNO").attr("disabled", "");
+                $("#txtTrayNO").focus();
+            }
+        })
+    }
+
+
+    //验证出库箱并提交
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/ToStore/ValidateTrayNO2";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 500); //调用暂停函数
+                this.NextStep = function () {
+                    window.location.href = "/ToStore/Detail2?OldTrayNO=" + $("#lblOldTrayNO").text() + "&OldStoreNO=" + $("#hdStoreNO").val() + "&OldBarcode=" + $("#hdBarcode").val();
+                }
+            }
+        })
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>

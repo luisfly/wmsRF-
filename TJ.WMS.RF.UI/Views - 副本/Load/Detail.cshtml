@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "装载";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+    DataTable dt = ViewBag.data;
+    Boolean dtEmpty = (dt == null || dt.Rows.Count == 0);
+
+}
+@using System.Data;
+<input id="dtEmpty" type="hidden" value="@dtEmpty" />
+@if (!dtEmpty)
+{
+    <div class="box">
+        <table cellpadding="0" cellspacing="1">
+            <tr>
+                <td class="title">装载号</td>
+                <td class="content" id="lblLoadNO">@dt.Rows[0]["LoadNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">装载单号</td>
+                <td class="content" id="lblPaperNO">@dt.Rows[0]["PaperNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">门店编码</td>
+                <td class="content" id="lblStoreNO">@dt.Rows[0]["StoreNO"]</td>
+            </tr>
+            <tr>
+                <td class="title">门店名称</td>
+                <td class="content" id="lblStoreName">@dt.Rows[0]["StoreDesc"]</td>
+            </tr>
+            <!--
+            <tr>
+                <td class="title">车牌号码</td>
+                <td  class="content">
+                   <input type="text" name="txtTruckNO" id="txtTruckNO" class="tdInput" value="ViewData["TruckNO"]"/></td>
+             </tr>
+               -->
+
+            <tr>
+                <td class="title">出库箱</td>
+                <td class="content">
+                    <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="btn">
+        <input type="button" value="完成(F8)" id="btnOver" onclick="RF_LoadOver()" ; />
+        <input type="button" value="撤销(F9)" id="btnUnLoad" onclick="RF_LoadUnLoad()" ; />
+        <!--
+        <input  type="button" value="载具录入(F7)" id="btnCntainerSend"onclick="CntainerSend()"; />
+        -->
+    </div>
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        if ($("#dtEmpty").val() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("装载号无效，正在跳转...");
+            Pause(this, 500); //调用暂停函数
+            this.NextStep = function () {
+                document.location.href = "/Load";
+            }
+        }
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnOver").click();
+            }
+            if (e.which == 120)//F9
+            {
+                $("#btnUnLoad").click();
+            }
+//            if (e.which == 118)//F7
+//            {
+//                $("#btnCntainerSend").click();
+//            }
+        });
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                RF_LoadAdd();
+            }
+        }).blur();
+        $("#txtTrayNO").focus();
+    });
+
+
+    //=====================================================
+    function SetParmas() {
+        var params = {
+            "PaperNO": $("#lblPaperNO").text(),
+            "StoreNO": $("#lblStoreNO").text(),
+            "TrayNO": $("#txtTrayNO").val()
+        };
+        return params;
+    }
+
+    function RF_LoadAdd() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/Load/RF_LoadAdd";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#SuccessMsg").html("操作成功！");
+                $("#SuccessMsg").css("visibility", "visible");
+                $("#txtTrayNO").val("");
+                $("#txtTrayNO").select();
+                if ($("#lblStoreNO").text() == "") {
+                    window.location.reload();//刷新当前页面
+                }
+            }
+        });
+    }
+
+    function RF_LoadOver() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/Load/RF_LoadOver";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#SuccessMsg").css("visibility", "visible");
+                $("#SuccessMsg").html("操作成功，正在跳转...");
+                Pause(this, 300); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/Load";
+                }
+            }
+        });
+    }
+
+    function RF_LoadUnLoad() {
+        if ($("#lblStoreNO").text() == "") {
+            $("#Loading").css("visibility", "hidden");
+            $("#Msg").css("visibility", "visible");
+            $("#Msg").html("门店编码为空，不允许操作!");
+            return;
+        }
+        window.location.href = "/Load/UnLoad?PaperNO=" + $("#lblPaperNO").text();
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>
+

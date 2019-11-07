@@ -1,0 +1,197 @@
+﻿@{
+    ViewBag.Title = "装车";
+    Layout = "~/Views/Shared/_LayoutDetail.cshtml";
+}
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+    <tr>
+      <td class="title">装车单号</td>
+      <td  class="content" id="lblPaperNO">@ViewData["PaperNO"]</td>
+    </tr>
+    <tr>
+      <td class="title">门店编号</td>
+      <td  class="content" id="lblStoreNO">@ViewData["StoreNO"]</td>
+   </tr>
+   <tr>
+      <td class="title">门店名称</td>
+      <td  class="content" id="lblStoreName">@ViewData["StoreDesc"]</td>
+   </tr>
+  <tr>
+      <td class="title">车牌号码</td>
+      <td  class="content">
+         <input type="text" name="txtTruckNO" id="txtTruckNO" class="tdInput" value="@ViewData["TruckNO"]"/></td>
+   </tr>
+   <tr>
+      <td class="title">出库箱</td>
+      <td  class="content">
+         <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" /></td>
+   </tr>
+ </table>  
+</div>
+<div class="btn">
+  <input  type="button" value="完成(F8)" id="btnOver" onclick="LoadingOver()";/>
+  <input  type="button" value="撤销(F9)" id="btnCancel"onclick="LoadingCancel()"; />
+  <!--
+  <input  type="button" value="载具录入(F7)" id="btnCntainerSend"onclick="CntainerSend()"; />
+  -->
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119)//F8
+            {
+                $("#btnOver").click();
+            }
+            if (e.which == 120)//F9
+            {
+                $("#btnCancel").click();
+            }
+//            if (e.which == 118)//F7
+//            {
+//                $("#btnCntainerSend").click();
+//            }
+        });
+
+        $("#txtTrayNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTrayNO();
+            }
+        }).blur();
+
+        $("#txtTruckNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidateTruckNO();
+            }
+        }).blur();
+        if ($("#txtTruckNO").val() == "") {
+            $("#txtTruckNO").focus();
+        }
+        else {
+            $("#txtTrayNO").focus();
+        }
+    });
+
+
+    //=====================================================
+    function SetParmas() {
+        var params = {
+            "model.PaperNO": $("#lblPaperNO").text(),
+            "model.StoreNO": $("#lblStoreNO").text(),
+            "model.TruckNO": $("#txtTruckNO").val(),
+            "model.TrayNO": $("#txtTrayNO").val()
+        };
+        return params;
+    }
+
+    //验证车牌号
+    function ValidateTruckNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/TruckLoad/ValidateTruckNO";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTruckNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "hidden")
+                $("#Msg").html("");
+                $("#txtTrayNO").focus();
+            }
+        })
+    }
+
+    function ValidateTrayNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/TruckLoad/ValidateTrayNO";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("操作成功！");
+                $("#Msg").css("visibility", "visible");
+                $("#txtTrayNO").val("");
+                $("#txtTrayNO").select();
+            }
+        });
+    }
+
+    function LoadingOver() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var url = "/TruckLoad/LoadingOver";
+        var param = SetParmas();
+        $.post(url, param, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtTrayNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 1000); //调用暂停函数
+                this.NextStep = function () {
+                    document.location.href = "/TruckLoad";
+                }
+            }
+        });
+    }
+
+    function LoadingCancel() {
+        window.location.href = "/TruckLoad/UnLoad?PaperNO=" + $("#lblPaperNO").text() + "&StoreNO=" + $("#lblStoreNO").text();
+    }
+
+    function CntainerSend() {
+        window.location.href = "/TruckLoad/CntainerSend?PaperNO=" + $("#lblPaperNO").text() + "&StoreNO=" + $("#lblStoreNO").text();
+    }
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>
+

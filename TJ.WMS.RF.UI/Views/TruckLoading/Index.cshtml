@@ -1,0 +1,94 @@
+﻿@{
+    ViewBag.Title = "装车";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div  class="box">
+   <table cellpadding="0" cellspacing="1">
+   <tr>
+      <td class="title">装车单号</td>
+      <td  class="content">
+         <input type="text" name="txtPaperNO" id="txtPaperNO" class="tdInput"/>
+      </td>
+   </tr>
+    
+ </table>  
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#txtPaperNO").keypress(function (e) {
+            if (e.which == 13) {
+                ValidatePaperNO();
+            }
+        }).blur();
+
+        $("#txtPaperNO").focus();
+
+    });
+
+    function SetParams() {
+        var params = {
+            "PaperNO": $("#txtPaperNO").val()
+        }
+        return params;
+    }
+
+    //验证装车单
+    function ValidatePaperNO() {
+        $("#Loading").css("visibility", "visible");
+        $("#Msg").css("visibility", "hidden")
+        $("#Msg").html("");
+        var url = "/TruckLoading/ValidatePaperNO";
+        var params = SetParams();
+        $.post(url, params, function (data, txtStatus) {
+            if (data != "") {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible")
+                $("#Msg").html(data);
+                $("#txtPaperNO").select();
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").css("visibility", "visible");
+                $("#Msg").html("操作成功，正在跳转...");
+                Pause(this, 500); //调用暂停函数
+                this.NextStep = function () {
+                    window.location.href = "TruckLoading/Detail?PaperNO=" + $("#txtPaperNO").val();
+                }
+            }
+        })
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    function Pause(obj, iMinSecond) {
+        if (window.eventList == null) window.eventList = new Array();
+        var ind = -1;
+        for (var i = 0; i < window.eventList.length; i++) {
+            if (window.eventList[i] == null) {
+                window.eventList[i] = obj;
+                ind = i;
+                break;
+            }
+        }
+        if (ind == -1) {
+            ind = window.eventList.length;
+            window.eventList[ind] = obj;
+        }
+        setTimeout("GoOn(" + ind + ")", iMinSecond);
+    }
+    function GoOn(ind) {
+        var obj = window.eventList[ind];
+        window.eventList[ind] = null;
+        if (obj.NextStep) obj.NextStep();
+        else obj();
+    }
+    function GetUrlPara(paraName) {
+        var sUrl = location.href;
+        var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+        var re = new RegExp(sReg, "gi");
+        re.exec(sUrl);
+        return RegExp.$1;
+    }
+    ///////////////////////////////////////////////////////////////////
+</script>
+

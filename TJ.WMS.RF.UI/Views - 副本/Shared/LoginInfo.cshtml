@@ -1,0 +1,17 @@
+﻿@if (Session["User_ID"] == null  )
+{ 
+    <h3 class="title">@Session["CompanyTitle"]</h3>
+}
+else
+{ 
+    if(Session["User_Name"]!=null)
+    {
+       <h3>@ViewBag.Title</h3><a href="javascript:if(confirm('您确定要退出系统操作吗？')){window.location.href('/Home');}" target="_self">退出</a><span id="loginUser">欢迎，@Session["User_Name"]  </span>
+    }
+}
+<script type="text/javascript">
+function close()
+{
+  
+}
+</script>

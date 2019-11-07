@@ -1,0 +1,185 @@
+﻿@{
+    ViewBag.Title = "装车";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div  class="box">
+   <input type="hidden" id="hdPaperNO" />
+   <input type="hidden" id="hdStoreNO" />
+   <table cellpadding="0" cellspacing="1">
+   <tr>
+      <td class="title">笼车号</td>
+      <td  class="content">
+         <input type="text" name="txtContainerNO" id="txtContainerNO" class="tdInput"/>
+      </td>
+   </tr>
+    <tr>
+      <td class="title">装车单号</td>
+      <td  class="content" id="lblPaperNO">
+      </td>
+    </tr>
+    <tr>
+      <td class="title">门店编号</td>
+      <td  class="content" id="lblStoreNO"></td>
+   </tr>
+   <tr>
+      <td class="title">门店名称</td>
+      <td  class="content" id="lblStoreName"></td>
+   </tr>
+  <tr>
+      <td class="title">车牌号码</td>
+      <td  class="content">
+         <input type="text" name="txtTruckNO" id="txtTruckNO" class="tdInput"/></td>
+   </tr>
+   <tr>
+      <td class="title">出库箱号</td>
+      <td  class="content">
+         <input type="text" name="txtTrayNO" id="txtTrayNO" class="tdInput" /></td>
+   </tr>
+ </table>  
+</div>
+<div class="btn"><input  type="button" value="完成装车(F8)" id="btnSave" /> <input  type="button" value="撤销装车(F9)" id="btnCancle" /></div>
+<script type="text/javascript">
+$(document).ready(function(){
+   $("#txtContainerNO").keypress(function(e){
+      if(e.which==13)
+      {
+         window.focus();
+      }
+   }).blur(ValidateContainerNO);
+   $("#txtTrayNO").keypress(function(e){
+      if(e.which==13)
+      {
+         window.focus();
+      }
+   }).blur(ValidateTrayNO);
+   //=========完成装车==========
+   $("#btnSave").click(function(){
+     var url="/TruckLoad/Over";
+     var param={"model.ContainerNO":$("#txtContainerNO").val(),
+       "model.PaperNO":$("#hdPaperNO").val(),
+       "model.StoreNO":$("#hdStoreNO").val(),
+       "model.TrayNO":$("#txtTrayNO").val()};
+       $.post(url,param,function(data,txtStatus){
+          if(data!="")
+          {
+             $("#Msg").css("visibility","visible");
+             $("#Msg").html(data);
+          }
+          else
+          {
+             $("#Msg").html("完成装车");
+             $("#Msg").css("visibility", "visible");
+             
+             window.location.href="/TruckLoad";
+          }
+       });
+   });
+   //============撤销装车============
+   $("#btnCancle").click(function(){
+      var url="/TruckLoad/Cancel";
+     var param={"model.ContainerNO":$("#txtContainerNO").val(),
+       "model.PaperNO":$("#hdPaperNO").val(),
+       "model.StoreNO":$("#hdStoreNO").val(),
+       "model.TrayNO":$("#txtTrayNO").val()};
+       $.post(url,param,function(data,txtStatus){
+          if(data!="")
+          {
+             $("#Msg").css("visibility","visible");
+             $("#Msg").html(data);
+          }
+          else
+          {
+             window.location.href="/Menu";
+          }
+       });
+   })
+})
+//=====================================================
+function SetParmas()
+{
+   var params={"model.ContainerNO":$("#txtContainerNO").val(),
+       "model.PaperNO":$("#hdPaperNO").val(),
+       "model.StoreNO":$("#hdStoreNO").val(),
+       "model.TrayNO":$("#txtTrayNO").val()};
+   return params;
+}
+function ValidateContainerNO()
+{
+  var url="/TruckLoad/ValidateContainerNO";
+  var param={"model.ContainerNO":$("#txtContainerNO").val(),
+  "model.PaperNO":$("#hdPaperNO").val(),
+  "model.StoreNO":$("#hdStoreNO").val()};
+  $.post(url,param,function(data,txtStatus){
+      if(data!="")
+      {
+         var dataObj;
+         try 
+         {
+            dataObj = eval(data);
+            if (dataObj != undefined)
+            {
+                for(var index in dataObj)
+               {
+                  $("#hdPaperNO").val(dataObj[index].PaperNO);
+                  $("#hdStoreNO").val(dataObj[index].StoreNO);
+                  $("lblPaperNO").text(dataObj[index].PaperNO)
+                  $("lblStoreNO").text(dataObj[index].StoreNO)
+                  $("lblStoreName").text(dataObj[index].StoreName)
+               }
+            }
+         }
+         catch(exception)
+         {
+             $("#Msg").css("visibility","visible");
+             $("#Msg").html(data);
+         }
+      }
+      else
+      {
+         $("#Msg").css("visibility","hidden");
+         $("#Msg").html("");
+      }
+   })
+}
+function ValidateTrayNO()
+{
+  var url="/TruckLoad/ValidateTrayNO";
+  var param={"model.ContainerNO":$("#txtContainerNO").val(),
+  "model.PaperNO":$("#hdPaperNO").val(),
+  "model.StoreNO":$("#hdStoreNO").val(),
+  "model.TrayNO":$("#txtTrayNO").val(),
+  "model.TruckNO":$("#txtTruckNO").val()};
+  $.post(url,param,function(data,txtStatus){
+      if(data!="")
+      {
+         var dataObj;
+         try 
+         {
+            dataObj = eval(data);
+            if (dataObj != undefined)
+            {
+                for(var index in dataObj)
+               {
+                  $("#hdPaperNO").val(dataObj[index].PaperNO);
+                  $("#hdStoreNO").val(dataObj[index].StoreNO);
+                  $("lblPaperNO").text(dataObj[index].PaperNO)
+                  $("lblStoreNO").text(dataObj[index].StoreNO)
+                  $("lblStoreName").text(dataObj[index].StoreName)
+               }
+            }
+         }
+         catch(exception)
+         {
+             $("#Msg").css("visibility","visible");
+             $("#Msg").html(data);
+         }
+     }
+     else
+     {
+        $("#Msg").css("visibility","hidden");
+        $("#Msg").html("");
+     }
+  });
+}
+</script>
+

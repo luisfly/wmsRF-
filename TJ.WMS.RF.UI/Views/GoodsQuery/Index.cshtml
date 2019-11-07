@@ -1,0 +1,316 @@
+﻿@{
+    ViewBag.Title = "商品查询";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string ToDay = DateTime.Today.ToShortDateString();
+    string Barcode = Request.QueryString["Barcode"];
+}
+ <div class="box">
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarCode" name="txtBarCode" type="text" class="tdInput" value="@Barcode" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">商品名称</td>
+            <td class="content">
+                <input id="txtGoosName" name="txtGoosName" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">托盘编码</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">公司</td>
+            <td class="content" id="lblShipperNO"></td>
+        </tr>
+        <tr>
+            <td class="title">主条码</td>
+            <td class="content" id="lblMainBarcode"></td>
+        </tr>
+        <tr>
+            <td class="title">商品名称</td>
+            <td class="content" id="lblProductInfo"></td>
+        </tr>
+        <tr>
+            <td class="title">包装信息</td>
+            <td class="content" id="lblCaseUnitInfo"></td>
+        </tr>
+    </table>
+</div>
+    <div class="goodsquery">
+        <table id="tbMainQuery">
+            <thead>
+                <tr>
+                    <!--               <td>储位</td>
+                                   <td>托盘</td>
+                                   <td>当前数量</td>
+                                   <td>销定数量</td>  -->
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+ <script type="text/javascript">
+     var objGoodsList;
+     $(document).ready(function () {
+         
+         $("#txtBarCode").attr("disabled", "");
+
+         $("#txtBarCode").keypress(function (e) {
+             if (e.which == 13) {
+                 $("#txtTrayNO").val("");
+                 RFGoodsQuery(this);
+             }
+         }).blur();
+         $("#txtGoosName").keypress(function (e) {
+             if (e.which == 13) {
+                 RFGoodsQueryForName();
+             }
+         }).blur();
+         $("#txtTrayNO").keypress(function (e) {
+             if (e.which == 13) {
+                 $("#txtBarCode").val("");
+                 RFGoodsQuery(this);
+             }
+         });
+         $("#txtBarCode").focus();
+         if ($("#txtBarCode").val() != "") {//自动查询
+             RFGoodsQuery($("#txtBarCode"));
+             $("#txtBarCode").select();
+         }
+         
+
+     });
+     function SelectBarcode(barcode) {
+         $("#lblShipperNO").html("");
+         $("#lblMainBarcode").html("");
+         $("#lblProductInfo").html("");
+         $("#lblCaseUnitInfo").html("");
+         for (var index in objGoodsList) {
+             if (objGoodsList[index]['MainBarcode'] == barcode) {
+                 $("#lblShipperNO").html(objGoodsList[index]['ShipperNO']);
+                 $("#lblMainBarcode").html(objGoodsList[index]['MainBarcode']);
+                 $("#lblProductInfo").html(objGoodsList[index]['GoodsDesc'] );
+                 $("#lblCaseUnitInfo").html('规格:' + objGoodsList[index]['Spec'] + ';单位:' + objGoodsList[index]['Unit'] + ';包装单位:' + objGoodsList[index]['CaseUnits']);
+                 return;
+             }
+         }
+     }
+     function RFGoodsQuery(obj) {
+         $("#lblShipperNO").html("");
+         $("#lblMainBarcode").html("");
+         $("#lblProductInfo").html("");
+         $("#lblCaseUnitInfo").html("");
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+         $("#txtGoosName").val("");
+         //var dfaultValue = $("#txtBarCode").attr("defaultValue");
+         //var newValue = $("#txtBarCode").val();
+         //if (newValue != "" && dfaultValue == newValue) {
+         //    $("#Loading").css("visibility", "hidden");
+         //    alert(newValue);
+         //    return;
+         //}
+         $("#tbMainQuery thead").html("");
+         $("#tbMainQuery tbody").html("");
+         //if ($("#txtBarCode").val() == "") {
+         //    $("#tbMainQuery thead").html("");
+         //    $("#tbMainQuery tbody").html("");
+         //    $("#Loading").css("visibility", "hidden");
+         //    $("#Msg").css("visibility", "visible");
+         //    $("#Msg").html("商品条码输入不能为空！");
+         //    $("#txtBarCode").focus();
+         //    return;
+         //}
+         $("#tbMainQuery thead").html("");
+         $("#tbMainQuery tbody").html("");
+         $.post("/GoodsQuery/RFGoodsQuery",
+            {
+                "BarCode": $("#txtBarCode").val(),
+                "TrayNO": $("#txtTrayNO").val()
+            },
+            function (data, textStatus) {
+                //if ($("#txtBarCode").val() != "") {
+                    //有数据
+                    //alert(data);
+                    var dataObj;
+                    try {
+                        dataObj = eval(data);
+                        objGoodsList = dataObj;//用于全局选择明细条码时用
+                        if (dataObj == undefined || dataObj.length <= 0) {
+                            //数据异常
+                            $("#tbMainQuery thead").html("");
+                            $("#tbMainQuery tbody").html("");
+                            $("#Loading").css("visibility", "hidden");
+                            $("#Msg").css("visibility", "visible");
+                            $("#Msg").html(data);
+                            //$("#txtBarCode").select();
+                            obj.select();
+                            return;
+                        }
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        var GoodsCount = dataObj[0]['GoodsCount'];
+                        trString = "<tr>"
+                        trString += "<td style='text-align: center;'>储位/<br/>供应商</td>";
+                        if ($("#txtBarCode").val() != "") {
+                            trString += "<td style='text-align: center;'>托盘/<br/>生产日期</td>";
+                        } else
+                        {
+                            trString += "<td style='text-align: center;'>条码/<br/>生产日期</td>";
+                        }
+                        if (GoodsCount > 1) {
+                            trString += "<td style='text-align: center;'>商品名称/<br/>包装信息</td>";
+                        }
+                       // trString += "<td>生产日期</td>";
+                        trString += "<td nowrap style='text-align: center;white-space:nowrap;word-break:nowrap'>可用/<br/>锁定</td>";
+                       // trString += "<td>锁定</td>";
+                        trString += "</tr>"
+                        $("#tbMainQuery thead").append(trString);
+                        var trString = "";
+                        for (var index in dataObj) {
+                            if (index == 0 && GoodsCount==1) {
+                                $("#lblShipperNO").html(dataObj[index]['ShipperNO']);
+                                $("#lblMainBarcode").html(dataObj[index]['MainBarcode']);
+                                $("#lblProductInfo").html(dataObj[index]['GoodsDesc']);
+                                $("#lblCaseUnitInfo").html('规格:' + dataObj[index]['Spec'] + ';单位:' + dataObj[index]['Unit'] + ';包装单位:' + dataObj[index]['CaseUnits']);
+                            }
+                            trString = "<tr>"
+                            trString += "<td>" + dataObj[index]['LocationNO'] + "<br/>" + dataObj[index]['VendorName'] + "</td>";
+                            if ($("#txtBarCode").val() != "") {
+                                trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['TrayNO'] + "</span><br/>" + dataObj[index]['ProductDate'] + "<br/>" + dataObj[index]['StockBatchNO'] + "</td>";
+                            } else {
+                                trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'><a  href='#' onclick=SelectBarcode('" + dataObj[index]['MainBarcode'] + "')>" + dataObj[index]['MainBarcode'] + "</a></span></span><br/>" + dataObj[index]['ProductDate'] + "<br/>" + dataObj[index]['StockBatchNO'] + "</td>";
+                            }
+                            if (GoodsCount > 1) {
+                                trString += "<td style='word-wrap: break-word; word-break: break-all;'><span >" + dataObj[index]['GoodsDesc'] + "</span><br/>规格:" + dataObj[index]['Spec'] + ";<br/>单位:" + dataObj[index]['Unit'] + ";<br/>包装单位:" + dataObj[index]['CaseUnits'] + "</td>";
+                            }
+                          //trString += "<td>" + dataObj[index]['ProductDate'] + "<br/>" +dataObj[index]['StockBatchNO'] + "</td>";
+                            trString += "<td>" + dataObj[index]['Qty'] + "<br/>(" + dataObj[index]['LockQty'] + ")</td>";
+                          //trString += "<td>" + dataObj[index]['LockQty'] + "</td>";
+                            trString += "</tr>"
+                            if (trString != "<tr></tr>")
+                                $("#tbMainQuery tbody").append(trString);
+
+                        }
+                        var color = "#ffeab3"
+                        $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                        /* 把背景色保存到属性中 */
+                        $("#tbMainQuery tr:odd").attr("bg", color);
+                        $("#tbMainQuery tr:even").attr("bg", "#fff");
+                        $("#Loading").css("visibility", "hidden");
+                        //$("#txtBarCode").select();
+                        obj.select();
+                    }
+                catch (exception) {
+                    
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        //$("#txtBarCode").select();
+                        obj.select();
+                    }
+                //
+                //else {
+                //    $("#tbMainQuery thead").html("");
+                //    $("#tbMainQuery tbody").html("");
+                //    $("#Loading").css("visibility", "hidden");
+                //    $("#Msg").css("visibility", "visible");
+                //    $("#Msg").html("条码输入不能为空！");
+                //    $("#txtBarCode").select();
+                //}
+            }
+         )
+     }
+
+     function RFGoodsQueryForName() {
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+         $("#txtBarCode").val("");
+         $("#txtTrayNO").val("");
+         $("#lblShipperNO").html("");
+         $("#lblMainBarcode").html("");
+         $("#lblProductInfo").html("");
+         $("#lblCaseUnitInfo").html("");
+         $("#tbMainQuery thead").html("");
+         $("#tbMainQuery tbody").html("");
+         if ($("#txtGoosName").val()=="") {
+             $("#tbMainQuery thead").html("");
+             $("#tbMainQuery tbody").html("");
+             $("#Loading").css("visibility", "hidden");
+             $("#Msg").css("visibility", "visible");
+             $("#Msg").html("商品名称输入不能为空！");
+             $("#txtGoosName").focus();
+             return;
+         }
+
+
+         $.post("/GoodsQuery/RFGoodsQueryForName",
+            {
+                "GoodsDesc": $("#txtGoosName").val(),
+            },
+            function (data, textStatus) {
+                //alert(data);
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj == undefined || dataObj.length <= 0) {
+                        //数据异常
+                        $("#tbMainQuery thead").html("");
+                        $("#tbMainQuery tbody").html("");
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "visible");
+                        $("#Msg").html(data);
+                        $("#txtBarCode").select();
+                        return;
+                    }
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    trString = "<tr>"
+                    trString += "<td>条码</td>";
+                    trString += "<td>商品名称</td>";
+                    trString += "</tr>"
+                    $("#tbMainQuery thead").append(trString);
+                    var trString = "";
+                    for (var index in dataObj) {
+                        //alert(dataObj[index]['Barcode']);
+                        trString = "<tr>"
+                        trString += "<td><a href='../GoodsQuery?Barcode=" + dataObj[index]['Barcode'] + "'>" + dataObj[index]['Barcode'] + "</a></td>";
+                        trString += "<td>" + dataObj[index]['GoodsDesc'] + "</td>";
+                        trString += "</tr>"
+                        if (trString != "<tr></tr>")
+                            $("#tbMainQuery tbody").append(trString);
+
+                    }
+                    var color = "#ffeab3"
+                    $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+                    /* 把背景色保存到属性中 */
+                    $("#tbMainQuery tr:odd").attr("bg", color);
+                    $("#tbMainQuery tr:even").attr("bg", "#fff");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#txtGoosName").select();
+                }
+                catch (exception) {
+                    $("#tbMainQuery thead").html("");
+                    $("#tbMainQuery tbody").html("");
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+                    $("#txtGoosName").select();
+                }
+            }
+         )
+     }
+
+ </script>
+

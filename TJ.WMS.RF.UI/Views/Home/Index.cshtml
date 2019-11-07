@@ -1,0 +1,133 @@
+﻿@{
+    Layout = null;
+    int width = Request.Browser.ScreenPixelsWidth;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>@Session["CompanyTitle"]</title>
+
+    <link href="@Url.Content("~/Content/Layout2.css")" rel="stylesheet" type="text/css" />
+
+    <!--[if lte IE 8]>
+       <link href="@Url.Content("~/Content/Layout1.css")" rel="stylesheet" type="text/css" />
+    <![endif]-->
+
+    <script src="@Url.Content("~/Scripts/jquery-1.4.4.min.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/jquery.validate.min.js")" type="text/javascript"></script>
+</head>
+<body>
+    @*<script type="text/javascript">
+    $(document).ready(function () {
+        dynamicLoadCss("Content/Layout1.css")
+    })
+            function dynamicLoadCss(url) {
+        var head = document.getElementsByTagName('head')[0];
+        var link = document.createElement('link');
+        link.type='text/css';
+        link.rel = 'stylesheet';
+        link.href = url;
+        head.appendChild(link);
+    }
+    </script>*@
+<div id="header">
+  <h3 class="title">@Session["CompanyTitle"]</h3></div>
+ <form id="loginForm" action="/Menu" method="POST">
+  <div class="box">
+<table cellspacing="1" cellpadding="0">
+    <tr>
+    <td class="title">用户名</td>
+    <td class="content"><input type="text"  name="txtUser" id="txtUser" class="tdInput"  /></td>
+    </tr>
+     <tr>
+    <td class="title">密&nbsp;&nbsp;&nbsp;&nbsp;码</td>
+    <td class="content"><input type="password" name="txtPsw" id="txtPsw" class="tdInput" /></td>
+    </tr>
+
+</table>
+</div>
+ <div class="btn"><input id="btnSubmit"  type="button" value="确定(F8)"/> <input id="btnCancel"   type="button"  value="重置(F9)"/></div> 
+</form>
+  <div id="messageBox" style="width:100%"></div>
+ <div id="Msg" style="width:100%"></div>
+ <div id="footer"></div> 
+ <div id="CompanyInfo"></div>
+ <div id="Loading" style="visibility: hidden"><img alt="" src="/Content/loading.gif" /></div>
+ 
+</body>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#CompanyInfo").html("<a style='text-decoration: none; font-family: 宋体, Arial, Helvetica, sans-serif; font-size: 12px;text-align: center;' href='http://www.gdrzcd.com'>锐志诚达电子科技</a><a style='text-decoration: none; color: #0954A6; font-family: 宋体, Arial, Helvetica, sans-serif; font-size: 12px;'> RZCD. All Rights Reserved</a>");
+        $("#txtUser").keydown(function () {
+            $("#Msg").html("");
+            if (event.keyCode == 13 && event.srcElement.type == "text") {
+                //event.keyCode = 9;
+                $("#txtPsw").focus();
+            }
+        })
+        $("#btnSubmit").click(function () {
+            doSubmit();
+        });
+        $("#txtPsw").keypress(function (e) {
+            $("#Msg").html("");
+            if (e.which == 13) {
+                doSubmit();
+            }
+        })
+        $("#btnCancel").click(function () {
+            $("#txtUser").val("");
+            $("#txtPsw").val("");
+            $("#txtUser").focus();
+        });
+        $(document).keydown(function (e) {
+            var elem = e.srcElement || e.target;
+            if (e.which == 119) {
+                doSubmit();
+            }
+            else if (e.which == 120) {
+                $("#btnCancel").click();
+            }
+        })
+        
+        $("#txtUser").focus();
+    });
+function validateForm() {
+
+    //validate方法参数可选
+    return $("#loginForm").validate({
+        rules: {
+            txtUser: "required",
+            txtPsw: "required"
+        },
+        messages: {
+            txtUser: "登录名不能为空！",
+            txtPsw:  "密码输入不能为空！"
+        },
+        errorLabelContainer: "#messageBox",
+        wrapper: "li"
+    }).form();
+}
+function doSubmit() {
+    if (validateForm()) {
+        $("#Loading").css("visibility", "")
+        $.post("/Home/Submit", { "model.User_ID": $("#txtUser").val(), "model.Password": $("#txtPsw").val() }, 
+           function (data, textStatus) {
+               if (data != "") {
+                   $("#Loading").css("visibility", "hidden")
+                    $("#Msg").html(data);
+                }
+                else {
+                    $("#Loading").css("visibility", "hidden")
+                    location.href = "/Menu";
+                }
+        });
+    }
+}    
+</script>
+</html>
+
+

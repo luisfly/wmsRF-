@@ -1,0 +1,186 @@
+﻿@{
+    ViewBag.Title = "移仓";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="box">
+   <table cellpadding="0" cellspacing="1">
+      <tr>
+           <td class="title">原托盘</td>
+           <td class="content">
+              <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+           </td>
+      </tr>
+      <tr>
+          <td class="title">目标储位</td>
+          <td class="content">
+             <input id="txtLocationNO" name="txtLocationNO" type="text" class="tdInput" />
+          </td>
+       </tr>
+      <tr>
+       <td class="title">原储位</td>
+       <td class="content" id="lblOldLocation"></td>
+       </tr>
+    </table>
+</div>
+<div style="height:1px"></div>
+<div class="goodsquery">
+    <table id="tbMainQuery" style="text-overflow:ellipsis; word-break:keep-all; overflow:hidden;">
+        <thead>
+            <tr>
+                <!---->
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script type="text/javascript">
+var isEnter=false;
+$(document).ready(function () {
+    $("#txtTrayNO").focus();
+    $("#txtLocationNO").attr("disabled", "disabled");
+
+    $("#txtTrayNO").keypress(function (e) {
+        if (e.which == 13) {
+            isEnter = true;
+            //window.focus();
+            ValidateTrayNO();
+        }
+    }).blur();
+
+    $("#txtLocationNO").keypress(function (e) {
+        if (e.which == 13) {
+            //window.focus();
+            ValidateToLocationNO();
+        }
+    }).blur();
+
+    $("#txtTrayNO").focus();
+})
+//================================
+function ValidateTrayNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden");
+    $("#Msg").html("");
+    $("#tbMainQuery thead").html("");
+    $("#tbMainQuery tbody").html("");
+   var url="/StockMove/ValidateTrayNO";
+   var params={"model.TrayNO": $("#txtTrayNO").val()};
+   $.post(url, params, function (data, txtStatus) {
+       if (data != "") {
+           var dataObj;
+           try {
+               dataObj = eval(data);
+               if (dataObj == undefined || dataObj.length <= 0) {
+                   //数据异常
+                   $("#tbMainQuery thead").html("");
+                   $("#tbMainQuery tbody").html("");
+                   $("#Loading").css("visibility", "hidden");
+                   $("#Msg").css("visibility", "visible");
+                   $("#Msg").html(data);
+                   $("#txtLocationNO").val("");
+                   $("#lblOldLocation").text("")
+                   $("#txtTrayNO").focus();
+                   $("#txtTrayNO").select();
+                   return;
+               }
+               trString = "<tr>"
+               trString += "<td style='width:40px;text-align: center;'>数量/<br/>箱数</td>";
+               trString += "<td style='text-align: center;'>商品条码/<br/>商品名称</td>";
+              // trString += "<td>商品名称</td>";
+               trString += "<td style='text-align: center;'>生产日期/<br/>供应商</td>";
+              // trString += "<td>供应商</td>";
+              // trString += "<td>供应商</td>";
+               trString += "</tr>"
+               $("#tbMainQuery thead").append(trString);
+               var trString = "";
+               for (var index in dataObj) {
+
+                   trString = "<tr>"
+                   trString += "<td>" + dataObj[index]['Qty'] + "<br/>(" + dataObj[index]['CaseSrcQty'] + ")</td>";
+                   trString += "<td style='word-wrap: break-word; word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['Barcode'] + "</span> <br/>" + dataObj[index]['GoodsDesc'] + "</td>";
+                   trString += "<td style='word-wrap: break-word;word-break: break-all;'><span  nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['ProductDate'] + "</span>  <br/>" + dataObj[index]['VendorName'] + "</td>";
+                   trString += "</tr>"
+                   //trString = "<tr class=\""+ bg +"\">"
+                   //trString += "<td>(" + dataObj[index]['CaseSrcQty'] + ")</td>";
+                   //trString += "<td>" + dataObj[index]['GoodsDesc'] + "</td>";
+                   ////trString += "<td nowrap style='white-space:nowrap;word-break:nowrap'>" + dataObj[index]['ProductDate'] + "</td>";
+                   ////trString += "<td>" + dataObj[index]['CaseSrcQty'] + "</td>";
+                   //trString += "<td >" + dataObj[index]['VendorName'] + "</td>";
+                   //trString += "</tr>"
+                   if (trString != "<tr></tr>")
+                       $("#tbMainQuery tbody").append(trString);
+               }
+               var color = "#ffeab3"
+               $("#tbMainQuery tr:odd td").css("background-color", color);  //改变偶数行背景色
+               /* 把背景色保存到属性中 */
+               $("#tbMainQuery tr:odd").attr("bg", color);
+               $("#tbMainQuery tr:even").attr("bg", "#fff");
+               $("#Loading").css("visibility", "hidden");
+               $("#lblOldLocation").html(dataObj[index].LocationNO);
+               $("#txtLocationNO").attr("disabled", "");
+               $("#txtLocationNO").focus();
+           }
+           catch (exception) {
+
+               $("#tbMainQuery thead").html("");
+               $("#tbMainQuery tbody").html("");
+               $("#Loading").css("visibility", "hidden");
+               $("#Msg").css("visibility", "visible");
+               $("#Msg").html(data);
+               $("#txtLocationNO").val("");
+               $("#lblOldLocation").text("")
+               $("#txtTrayNO").focus();
+               $("#txtTrayNO").select();
+           }
+       }
+       else {
+           $("#tbMainQuery thead").html("");
+           $("#tbMainQuery tbody").html("");
+           $("#Loading").css("visibility", "hidden");
+           $("#Msg").css("visibility", "visible");
+           $("#Msg").html("数据异常，请重试!");
+           $("#txtLocationNO").val("");
+           $("#lblOldLocation").text("")
+           $("#txtTrayNO").focus();
+           $("#txtTrayNO").select();
+       }
+   })
+}
+//=============================
+function ValidateToLocationNO() {
+    $("#Loading").css("visibility", "visible");
+    $("#Msg").css("visibility", "hidden");
+    $("#Msg").html("");
+   var url="/StockMove/ValidateToLocationNO";
+   var params = {
+       "model.TrayNO": $("#txtTrayNO").val(),
+       "model.ToLocationNO": $("#txtLocationNO").val(),
+       "model.LocationNO": $("#lblOldLocation").text()
+   };
+    $.post(url,params,function(data,txtStatus){
+          if(data!="") {
+              $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility","visible");
+              $("#Msg").html(data);
+              $("#txtLocationNO").select();
+              return false;
+          }
+          else {
+              $("#Loading").css("visibility", "hidden");
+              $("#txtLocationNO").attr("disabled", "disabled");
+              $("#Msg").html("移仓成功！");
+              $("#Msg").css("visibility", "visible");
+              $("#txtLocationNO").attr("disabled", "disabled");
+             $("#txtTrayNO").val("");
+             $("#txtLocationNO").val("");
+             $("#lblOldLocation").text("")
+             $("#tbMainQuery thead").html("");
+             $("#tbMainQuery tbody").html("");
+             $("#txtTrayNO").select();
+             return true;
+          }
+    })
+}
+</script>
+

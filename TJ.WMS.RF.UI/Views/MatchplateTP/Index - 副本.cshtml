@@ -1,0 +1,820 @@
+﻿@*--TIM 2017-02-27到期日期改成都允许界面录入*@
+@{
+    ViewBag.Title = "退配分板";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string ToDay = DateTime.Today.ToString("yyyy-MM-dd");
+}
+<script src="@Url.Content("~/My97DatePicker/WdatePicker.js")" type="text/javascript"></script>
+<div class="box">
+    <input id="hdMulitShipper" type="hidden" value="@ViewData["ShipperNO"]" />
+    <input id="hdCaseUnit" type="hidden" value="" />
+    <input id="hdShelfLife" type="hidden" value="" />
+    <input id="ModuleID" type="hidden" value="" />
+    <input id="hdToDay" type="hidden" value="@ToDay" />
+    <input id="hdShipperNO" type="hidden" value="@ViewData["ShipperNO"]" />
+    <input id="hdBatchBuildTypeID" type="hidden" value="" />
+    <input id="hdBackCaseProductDate" type="hidden" value="1" />
+    <table cellpadding="0" cellspacing="1">
+        <tr>
+            <td class="title">退配托盘</td>
+            @*<td class="content">@ViewData["OldTrayNO"]</td>*@
+            <td class="content"><input id="txtOldTrayNO" name="txtOldTrayNO" type="text" class="tdInput" /></td>
+        </tr>
+        @if (@ViewData["ShipperNO"].ToString() == "")
+        {
+            <tr>
+                <td class="title">公司编码</td>
+                <td class="content">
+                    <input id="txtShipperNO" name="txtShipperNO" type="text" class="tdInput" value="@ViewData["ShipperNO"]" />
+                </td>
+            </tr>
+        }
+
+        <tr>
+            <td class="title">商品条码</td>
+            <td class="content">
+                <input id="txtBarCode" name="txtBarCode" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">供应商信息</td>
+            <td class="content" id="lblSupplierInfo"></td>
+        </tr>
+        <tr>
+            <td class="title">商品信息</td>
+            <td class="content">
+                <div id="lblProductInfo"></div>
+                <div id="lblUnit"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="title" id="lblProductDate">生产日期</td>
+            <td class="content">
+                <!--onclick="WdatePicker()"-->
+                <input id="txtProductDate" name="txtProductDate" type="text" class="tdInput" value="" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">到期日期</td>
+            <td class="content">
+                <input id="txtEffectiveDate" name="txtEffectiveDate" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr id="panelBatchNO">
+            <td class="title">批号</td>
+            <td class="content">
+                <input id="txtStockBatchNO" name="txtStockBatchNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">目标托盘</td>
+            <td class="content">
+                <input id="txtTrayNO" name="txtTrayNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">供应商编码</td>
+            <td class="content">
+                <input id="txtVendorNO" name="txtVendorNO" type="text" class="tdInput" />
+            </td>
+        </tr>
+        <tr>
+            <td class="title">实际数量</td>
+            <td class="content">
+                <!--onkeypress="if((event.keyCode<48 || event.keyCode>57)) event.returnValue=false" -->
+                <input id="txtProductNum" name="txtProductNum" type="text" style="ime-mode:disabled"
+                       onKeypress="return (/[\d.]/.test(String.fromCharCode(event.keyCode)))"
+                       onafterpaste="this.value=this.value.replace(/\D/g,'')" class="tdInput" />
+            </td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+     $(document).ready(function () {
+         //SetInputDisabled(1);
+         //         $("#ModuleID").val(GetUrlPara("ID"));
+         //         if ($("#ModuleID").val() == "1")
+         //         { $("#lblMainTitle").html("配送收货"); }
+         //         else { $("#lblMainTitle").html("退配分板"); }
+         $("#txtShipperNO").attr("disabled", "disabled");
+         $("#txtBarCode").attr("disabled", "");
+         $("#txtProductDate").attr("disabled", "disabled");
+         $("#txtEffectiveDate").attr("disabled", "disabled");
+         $("#txtTrayNO").attr("disabled", "disabled");
+         $("#txtVendorNO").attr("disabled", "disabled");
+         $("#txtProductNum").attr("disabled", "disabled");
+         $("#txtStockBatchNO").attr("disabled", "disabled");
+         $("#txtOldTrayNO").keypress(function (e) {
+             if (e.which == 13) {
+                 ValidateDistTray();//ValidateOldTrayNO();
+                 //document.getElementById("panelBatchNO").style.display = "none";
+                 //document.getElementById("panelBatchNO").style.display = "";
+             }
+         }).blur();
+
+         $("#txtShipperNO").keypress(function (e) {
+             if (e.which == 13) {
+                 ValidateShipper();
+             }
+         }).blur();
+
+         $("#txtBarCode").keypress(function (e) {
+             if (e.which == 13) {
+                 ValidaBarCode();
+             }
+         }).blur();
+         //=======================生产日期==================
+         $("#txtProductDate").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateProductDate();
+             }
+         }).blur();
+         //=============================================
+         $("#txtEffectiveDate").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateEffectiveDate();
+             }
+         }).blur();
+         $("#txtTrayNO").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateTrayNO();
+             }
+         }).blur();
+
+         $("#txtVendorNO").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateVendorNO();
+             }
+         }).blur();
+
+         $("#txtProductNum").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateProductNum();
+             }
+         }).blur();
+         $("#txtProductNum").keyup(function (e) {
+             if (e.keyCode == 13) {
+                 //if (!isNaN(parseFloat($("#txtProductNum").val()))) {
+                 //    $(this).val(parseFloat($("#txtProductNum").val()));
+                 //}
+                 return;
+             }
+             var str = $("#txtProductNum").val();
+             if (str != "") {
+                 var n = parseFloat(str);
+                 if (str.split(".").length >= 2 && str.split(".")[1].length > 3) {
+                     $(this).val(parseFloat(str.split(".")[0]) + parseFloat(str.split(".")[1].substr(0, 3)) / 1000.0);
+                 } else
+                     if (str.split(".").length >= 3) {
+                         $(this).val(n.toFixed(3));
+                     }
+             }
+         }).focusout(function () {
+             $(this).keyup();
+         });
+         $("#txtStockBatchNO").keypress(function (e) {
+             if (e.which == 13) {
+                 //window.focus();
+                 ValidateStockBatchNO();
+             }
+         }).blur();
+         document.getElementById("panelBatchNO").style.display = "none";
+         $("#txtOldTrayNO").focus();
+     });
+  function SetInputDisabled(index)
+{
+    var ip= $("input[type=text]");
+    var i=0;
+    ip.each(function(){
+      i++;
+      if(i==index)
+      {
+        $(this).focus();
+      }
+      if(i>index)
+      {
+         $(this).attr("disabled","disabled");
+      }
+      else
+      {
+          $(this).attr("disabled","")
+      }
+       if($("#hdShelfLife").val()=="0")
+       {
+          $("#txtProductDate").attr("disabled","disabled");
+          $("#txtEffectiveDate").attr("disabled","disabled");
+       }
+    })
+
+}
+function ValidaBarCode() {
+    $("#Loading").css("visibility", "visible");
+      $("#Msg").css("visibility", "hidden");
+      $("#Msg").html("");
+      $("#lblSupplierInfo").text("");
+      $("#lblProductInfo").text("");
+     var dfaultValue= $("#txtBarCode").attr("defaultValue");
+     var newValue=$("#txtBarCode").val();
+     if(newValue!="" && dfaultValue==newValue) {
+         $("#Loading").css("visibility", "hidden");
+       return;
+     }
+     $.post("/MatchplateTP/ValidaBarCode",
+        {
+            "BarCode": $("#txtBarCode").val(),
+            "OldTrayNO": $("#txtOldTrayNO").val(),
+            "ShipperNO": $("#hdShipperNO").val()
+        },
+        function (data, textStatus) {
+            if (data != "") {
+                var dataObj;
+                try {
+                    dataObj = eval(data);
+                    if (dataObj != undefined) {
+                        if (dataObj.length < 0) { return false }
+                        $("#lblSupplierInfo").html(dataObj[0].VendorName);
+                        $("#lblProductInfo").html(dataObj[0].GoodsName);
+                        $("#lblUnit").html(dataObj[0].Unit);
+                        $("#hdShelfLife").val(dataObj[0].ShelfLife);
+                        $("#txtVendorNO").val(dataObj[0].VendorNO);
+                        $("#hdBatchBuildTypeID").val(dataObj[0].BatchBuildTypeID);//1.自动生产日期批号；2.自动生产日期+到期日期批号；3.手工批号
+                        $("#hdBackCaseProductDate").val(dataObj[0].BackCaseProductDate);//0.不反算；1.反算
+
+                        if ($("#hdBatchBuildTypeID").val() == '3')
+                            document.getElementById("panelBatchNO").style.display = "";//允许录入批号
+                        //如果扫新条码是同一个供应商则保留，否则清空
+                        if($("#txtVendorNO").val() != dataObj[0].VendorNO){
+                            $("#txtVendorNO").val("");
+                        }
+                        if (dataObj[0].ShelfLife == "0") {
+                            $("#lblProductDate").text("收货日期");
+                            //$("#txtProductDate").val(formatDate(new Date()));
+                            $("#txtProductDate").val($("#hdToDay").val());
+                            $("#txtEffectiveDate").val("");
+                            //$("#txtProductDate").attr("disabled", "disabled");//2016-11-24 TIM 改为不考虑保质期也支持录入日期
+                            $("#txtProductDate").attr("disabled", "");//2016-11-24
+                            //$("#txtEffectiveDate").attr("disabled", "");
+                            $("#txtEffectiveDate").attr("disabled", "disabled");
+                            //SetInputDisabled(4);
+                            //$("#txtTrayNO").attr("disabled", "");
+                            //$("#txtTrayNO").select();//2016-11-24
+                            $("#txtProductDate").select();//2016-11-24
+                        }
+                        else {
+                            $("#txtProductDate").val("");
+                            $("#txtEffectiveDate").val("");
+                            $("#lblProductDate").text("生产日期");
+                            $("#txtProductDate").attr("disabled", "");
+                            $("#txtEffectiveDate").attr("disabled", "");
+                            $("#txtProductDate").select();
+                        }
+                        $("#Loading").css("visibility", "hidden");
+                        $("#Msg").css("visibility", "hidden");
+                        $("#Msg").html("");
+                    }
+                }
+                catch (exception) {
+                    $("#Loading").css("visibility", "hidden");
+                    $("#Msg").css("visibility", "visible");
+                    $("#Msg").html(data);
+
+                    $("#txtBarCode").attr("disabled", "");
+                    $("#txtProductDate").attr("disabled", "disabled");
+                    $("#txtEffectiveDate").attr("disabled", "disabled");
+                    $("#txtTrayNO").attr("disabled", "disabled");
+                    $("#txtVendorNO").attr("disabled", "disabled");
+                    $("#txtProductNum").attr("disabled", "disabled");
+                    $("#txtBarCode").select();
+
+                    //SetInputDisabled(1);
+                    return false;
+                }
+
+            }
+            else {
+                $("#Loading").css("visibility", "hidden");
+                $("#Msg").html("");
+                $("#Msg").css("visibility", "hidden");
+                SetInputDisabled(1);
+                return true;
+            }
+        }
+     )
+  }
+function ValidateProductDate() {
+    if ($("#txtProductDate").val() == "") {
+        $("#txtEffectiveDate").attr("disabled", "");
+        $("#txtEffectiveDate").select();
+    }
+      $("#Loading").css("visibility", "visible");
+      $("#Msg").css("visibility", "hidden");
+      $("#Msg").html("");
+      var dt = $("#txtProductDate").val();
+      dt = MyFormatDate(dt);
+      $("#txtProductDate").val(dt);
+      if ($("#Msg").html() != "") {
+          $("#Loading").css("visibility", "hidden");
+          return;
+      }
+      $.post("/MatchplateTP/ValidateProductDate",
+         {"ProductDate":$("#txtProductDate").val(),
+          "Barcode":$("#txtBarCode").val(),
+          "OldTrayNO": $("#txtOldTrayNO").val(),
+          "ShipperNO": $("#hdShipperNO").val()
+         },
+         function(data, textStatus)
+        {
+           if (data != "") {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").css("visibility","visible");
+              $("#Msg").html(data);
+              //SetInputDisabled(2);
+              $("#txtProductDate").select();
+              return false;
+           }
+           else {
+               $("#Loading").css("visibility", "hidden");
+               $("#Msg").css("visibility","hidden");
+               $("#Msg").html("");
+               /*
+               //2017-02-27 改为都必需录入到期日期的方式
+               var date=StrToDate($("#txtProductDate").val());
+               var day=parseInt($("#hdShelfLife").val());
+               $("#txtEffectiveDate").val(AddDays(date,day));
+               //SetInputDisabled(3);
+               $("#txtBarCode").attr("disabled", "");
+               $("#txtEffectiveDate").attr("disabled", "");
+               $("#txtEffectiveDate").select();
+               */
+               //*
+              if ($("#hdShelfLife").val()=="0"){//2016-11-24 TIM 不管理保质期也可录入收货日期但不能录入到期日期
+                  $("#txtTrayNO").attr("disabled", "");
+                  //$("#txtTrayNO").select();
+                  if ($("#hdBatchBuildTypeID").val() == "3") { //需要界面录入批号
+                      $("#txtStockBatchNO").attr("disabled", "");
+                      $("#txtStockBatchNO").select();
+                  } else {
+                      $("#txtTrayNO").attr("disabled", "");
+                      $("#txtTrayNO").select();
+                  }
+              }
+              else{
+                  var date=StrToDate($("#txtProductDate").val());
+                  var day=parseInt($("#hdShelfLife").val());
+                  $("#txtEffectiveDate").val(AddDays(date,day));
+                  //SetInputDisabled(3);
+                  $("#txtBarCode").attr("disabled", "");
+                  $("#txtEffectiveDate").attr("disabled", "");
+                  $("#txtEffectiveDate").select();
+              }
+              //*/
+              return true;
+           }
+        }
+      );
+  }
+
+  function ValidateEffectiveDate() {
+      $("#Loading").css("visibility", "visible");
+       $("#Msg").css("visibility", "hidden");
+       $("#Msg").html("");
+       var dt = $("#txtEffectiveDate").val();
+       dt = MyFormatDate(dt);
+       $("#txtEffectiveDate").val(dt);
+       if ($("#Msg").html() != "") {
+           $("#Loading").css("visibility", "hidden");
+           return;
+       }
+       if ($("#hdBackCaseProductDate").val() == "1" && $("#txtEffectiveDate").val() != "") {
+           var date = StrToDate($("#txtEffectiveDate").val());
+           var day = -parseInt($("#hdShelfLife").val());
+           $("#txtProductDate").val(AddDays(date, day));
+       }
+      $.post("/MatchplateTP/ValidateEffectiveDate",
+         {
+             "ProductDate":$("#txtProductDate").val(),
+             "EffectiveDate":$("#txtEffectiveDate").val(),
+             "ShelfLife":$("#hdShelfLife").val(),
+             "ModuleID":$("#ModuleID").val(),
+             "OldTrayNO": $("#txtOldTrayNO").val(),
+             "ShipperNO": $("#hdShipperNO").val()
+         },
+         function(data, textStatus)
+        {
+           if (data != "") {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html(data);
+              $("#Msg").css("visibility","visible");
+              $("#txtEffectiveDate").select();
+              return false;
+           }
+           else {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html("");
+              $("#Msg").css("visibility","hidden");
+               //SetInputDisabled(4);
+              //if ($("#hdBackCaseProductDate").val() == "1") {
+              //    var date=StrToDate($("#txtEffectiveDate").val());
+              //    var day=-parseInt($("#hdShelfLife").val());
+              //    $("#txtProductDate").val(AddDays(date,day));
+              //}
+              if ($("#hdBatchBuildTypeID").val()=="3"){ //需要界面录入批号
+                  $("#txtStockBatchNO").attr("disabled", "");
+                  $("#txtStockBatchNO").select();
+              }else{
+                  $("#txtTrayNO").attr("disabled", "");
+                  $("#txtTrayNO").select();
+              }
+              return true;
+           }
+        }
+      );
+  }
+
+  function ValidateTrayNO() {
+      $("#Loading").css("visibility", "visible");
+       $("#Msg").css("visibility", "hidden");
+       $("#Msg").html("");
+      $.post("/MatchplateTP/ValidateTrayNO",
+         {
+             "BarCode":$("#txtBarCode").val(),
+             "OldTrayNO": $("#txtOldTrayNO").val(),
+             "ProductDate": $("#txtProductDate").val(),
+             "EffectiveDate":$("#txtEffectiveDate").val(),
+             "TrayNO":$("#txtTrayNO").val(),
+             "ShipperNO": $("#hdShipperNO").val(),
+             "StockBatchNO": $("#txtStockBatchNO").val(),
+             "BatchBuildTypeID": $("#hdBatchBuildTypeID").val()
+    },
+         function(data, textStatus)
+        {
+           if (data != "") {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html(data);
+              $("#Msg").css("visibility","visible");
+              $("#txtTrayNO").select();
+              return false;
+           }
+           else
+           {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html("");
+              $("#Msg").css("visibility","hidden");
+              //SetInputDisabled(5);
+              $("#txtVendorNO").attr("disabled", "");
+              $("#txtVendorNO").select();
+              return true;
+           }
+        }
+      );
+  }
+
+  function ValidateVendorNO() {
+      $("#Loading").css("visibility", "visible");
+       $("#Msg").css("visibility", "hidden");
+       $("#Msg").html("");
+      $.post("/MatchplateTP/ValidateVendorNO",
+         {
+             "VendorNO": $("#txtVendorNO").val(),
+             "OldTrayNO": $("#txtOldTrayNO").val(),
+             "BarCode":$("#txtBarCode").val(),
+             "ShipperNO": $("#hdShipperNO").val()
+     },
+         function(data, textStatus)
+        {
+           if (data != "") {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html(data);
+              $("#Msg").css("visibility","visible");
+              $("#txtVendorNO").select();
+              return false;
+           }
+           else {
+               $("#Loading").css("visibility", "hidden");
+              $("#Msg").html("");
+              $("#Msg").css("visibility","hidden");
+              //SetInputDisabled(6);
+              $("#txtProductNum").attr("disabled", "");
+              $("#txtProductNum").select();
+              return true;
+           }
+        }
+      );
+  }
+
+
+  function ValidateProductNum() {
+      $("#Loading").css("visibility", "visible");
+      $("#Msg").css("visibility", "hidden");
+      $("#Msg").html("");
+      $.post("/MatchplateTP/ValidateProductNum",
+         {
+             "AQty": $("#txtProductNum").val(),
+             "OldTrayNO": $("#txtOldTrayNO").val(),
+             "BarCode": $("#txtBarCode").val(),
+             "VendorNO": $("#txtVendorNO").val(),
+             "ProductDate": $("#txtProductDate").val(),
+             "EffectiveDate": $("#txtEffectiveDate").val(),
+             "ShelfLife": $("#hdShelfLife").val(),
+             "TrayNO": $("#txtTrayNO").val(),
+             "ModuleID": $("#ModuleID").val(),
+             "ShipperNO": $("#hdShipperNO").val(),
+             "StockBatchNO": $("#txtStockBatchNO").val(),
+             "BatchBuildTypeID": $("#hdBatchBuildTypeID").val()
+         },
+         function (data, textStatus) {
+             if (data != "") {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html(data);
+                 $("#Msg").css("visibility", "visible");
+                 $("#txtProductNum").select();
+                 return false;
+             }
+             else {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html("操作成功！");
+                 $("#Msg").css("visibility", "visible");
+
+                 $("#txtBarCode").val("");
+                 $("#txtProductDate").val("");
+                 $("#txtEffectiveDate").val("");
+                 $("#txtTrayNO").val("");
+                 //$("#txtVendorNO").val(""); //20161101 TIM 先保留最后操作供应商，如果扫新条码是同一个供应则保留，否则清空
+                 $("#txtProductNum").val("");
+                 $("#lblSupplierInfo").text("");
+                 $("#lblProductInfo").text("");
+                 $("#txtStockBatchNO").val("");
+                 //SetInputDisabled(1);
+                 $("#txtProductDate").attr("disabled", "disabled");
+                 $("#txtEffectiveDate").attr("disabled", "disabled");
+                 $("#txtTrayNO").attr("disabled", "disabled");
+                 $("#txtVendorNO").attr("disabled", "disabled");
+                 $("#txtProductNum").attr("disabled", "disabled");
+                 $("#txtStockBatchNO").attr("disabled", "disabled");
+                 $("#txtBarCode").select();
+                 return true;
+             }
+         }
+      );
+     }
+
+     function ValidateShipper() {
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+         $.post("/MatchplateTP/ValidateShipper",
+         {
+             "OldTrayNO": $("#txtOldTrayNO").val(),
+             "ShipperNO": $("#txtShipperNO").val()
+         },
+         function (data, textStatus) {
+             if (data != "") {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html(data);
+                 $("#Msg").css("visibility", "visible");
+                 $("#txtShipperNO").select();
+                 $("#hdShipperNO").val("");
+                 return false;
+             }
+             else {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html("");
+                 $("#Msg").css("visibility", "hidden");
+                 //SetInputDisabled(5);
+                 $("#txtBarCode").attr("disabled", "");
+                 $("#txtBarCode").select();
+                 $("#hdShipperNO").val($("#txtShipperNO").val());
+                 return true;
+             }
+         }
+      );
+     }
+
+     function ValidateDistTray() {
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden")
+         $("#Msg").html("");
+         var url = "/MatchplateTP/ValidateDistTray";
+         var params = { "OldTrayNO": $("#txtOldTrayNO").val() };
+         $.post(url, params, function (data, txtStatus) {
+             if (data != "") {
+                 var dataObj;
+                 try {
+                     dataObj = eval(data);
+                     if (dataObj == undefined || dataObj.length <= 0) {
+                         //数据异常
+                         $("#Loading").css("visibility", "hidden");
+                         $("#Msg").css("visibility", "visible");
+                         $("#Msg").html(data);
+                         $("#txtOldTrayNO").select();
+                         return;
+                     }
+
+                     if (dataObj[0]['isSuccess'] == 1) {
+                         //OK
+
+                         $("#Loading").css("visibility", "hidden");
+                         $("#Msg").css("visibility", "hidden")
+                         $("#Msg").html("");
+                         if (dataObj[0]['sMessage'] != "") { //多货主有返回
+                             $("#hdShipperNO").val(dataObj[0]['sMessage']);
+                             $("#txtShipperNO").val(dataObj[0]['sMessage']);
+                             $("#txtShipperNO").attr("disabled", "disabled");
+                             $("#txtBarCode").attr("disabled", "");
+                             $("#txtBarCode").focus();
+                             $("#txtBarCode").select();
+                         } else {
+                             if ($("#hdMulitShipper").val() == "") {//多货主
+                                 $("#txtShipperNO").attr("disabled", "");
+                                 $("#txtShipperNO").focus();
+                                 $("#txtShipperNO").select();
+                             } else {
+                                 $("#txtBarCode").attr("disabled", "");
+                                 $("#txtBarCode").focus();
+                                 $("#txtBarCode").select();
+                             }
+                         }
+                     } else {
+                         $("#Loading").css("visibility", "hidden");
+                         $("#Msg").css("visibility", "visible");
+                         $("#Msg").html(dataObj[0]['sMessage']);
+                         $("#txtOldTrayNO").select();
+                     }
+                 }
+                 catch (exception) {
+                     //执行错误
+                     $("#Loading").css("visibility", "hidden");
+                     $("#Msg").css("visibility", "visible");
+                     $("#Msg").html(data);
+                     $("#txtOldTrayNO").select();
+                 }
+             } else {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").css("visibility", "visible");
+                 $("#Msg").html("执行异常，请重试！");
+                 $("#txtOldTrayNO").select();
+             }
+         })
+     }
+     function ValidateOldTrayNO() {
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+         $.post("/MatchplateTP/ValidateOldTrayNO",
+         {
+             "OldTrayNO": $("#txtOldTrayNO").val()
+         },
+         function (data, textStatus) {
+             if (data != "") {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html(data);
+                 $("#Msg").css("visibility", "visible");
+                 $("#txtOldTrayNO").select();
+                 return false;
+             }
+             else {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html("");
+                 $("#Msg").css("visibility", "hidden");
+                 //SetInputDisabled(5);
+                 if ($("#hdShipperNO").val() =="")
+                 {
+                     $("#txtShipperNO").focus();
+                 }else{
+                     $("#txtBarCode").attr("disabled", "");
+                     $("#txtBarCode").select();
+                 }
+
+                 return true;
+             }
+         }
+      );
+     }
+     function ValidateStockBatchNO() {
+         $("#Loading").css("visibility", "visible");
+         $("#Msg").css("visibility", "hidden");
+         $("#Msg").html("");
+         $.post("/MatchplateTP/ValidateStockBatchNO",
+         {
+             "BarCode": $("#txtBarCode").val(),
+             "StockBatchNO": $("#txtStockBatchNO").val(),
+             "BatchBuildTypeID": $("#hdBatchBuildTypeID").val()
+         },
+         function (data, textStatus) {
+             if (data != "") {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html(data);
+                 $("#Msg").css("visibility", "visible");
+                 $("#txtStockBatchNO").select();
+                 return false;
+             }
+             else {
+                 $("#Loading").css("visibility", "hidden");
+                 $("#Msg").html("");
+                 $("#Msg").css("visibility", "hidden");
+                 //SetInputDisabled(5);
+                 $("#txtTrayNO").attr("disabled", "");
+                 $("#txtTrayNO").select();
+
+                 return true;
+             }
+         }
+      );
+     }
+//======================================
+  function formatDate(d) {
+   var month=d.getMonth() + 1;
+   var day=d.getDate();
+   if(month<10)
+   {
+      month="0"+month;
+   }
+   if(day<10)
+   {
+      day="0"+day;
+   }
+   return d.getFullYear() + "-" + month + "-" +day;
+
+}
+//
+function GetUrlPara(paraName) {
+    var sUrl = location.href;
+    var sReg = "(?:\\?|&){1}" + paraName + "=([^&]*)"
+    var re = new RegExp(sReg, "gi");
+    re.exec(sUrl);
+    return RegExp.$1;
+}
+
+//============字符串格式化成时间类型===========
+function MyFormatDate(str) {
+    try {
+        $("#Msg").css("visibility", "hidden");
+        $("#Msg").html("");
+        var str1 = str
+        if (str == "") return;
+        if (str.length == 8) {
+            str = str.substr(0, 4) + "-" + str.substr(4, 2) + "-" + str.substr(6, 2);
+
+            if (!isDateString(str)) {
+                $("#Msg").html("日期格式错误");
+                $("#Msg").css("visibility", "visible");
+                return str1;
+            } else
+                return str;
+        }
+        else {
+            if (!isDateString(str)) {
+                $("#Msg").html("日期格式错误");
+                $("#Msg").css("visibility", "visible");
+            }
+            return str1;
+        }
+
+    }
+    catch (exception) {
+        $("#Msg").html("日期格式错误");
+        $("#Msg").css("visibility", "visible");
+        return str1;
+    }
+}
+
+function isDateString(sDate) {
+    var iaMonthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    var iaDate = new Array(3)
+    var year, month, day
+
+    if (arguments.length != 1) return false
+    iaDate = sDate.toString().split("-")
+    if (iaDate.length != 3) return false
+    if (iaDate[1].length > 2 || iaDate[2].length > 2) return false
+
+    year = parseFloat(iaDate[0])
+    month = parseFloat(iaDate[1])
+    day = parseFloat(iaDate[2])
+
+    if (year < 1900 || year > 2100) return false
+    if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) iaMonthDays[1] = 29;
+    if (month < 1 || month > 12) return false
+    if (day < 1 || day > iaMonthDays[month - 1]) return false
+    return true
+}
+
+function StrToDate(str)
+{
+   str = str.replace(/-/g,"/");
+   var date = new Date(str );
+   return date;
+}
+// 增加天
+function AddDays(date,value)
+{
+   date.setDate(date.getDate()+value);
+   return  formatDate(date);
+}
+</script>
+
